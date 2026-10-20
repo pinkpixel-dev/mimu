@@ -1,0 +1,38 @@
+/* Mimu design tokens. Palette from DOCS/MIMU_PROJECT_BLUEPRINT.md. Consume these everywhere; no raw colors in components. */
+:root {
+  color-scheme: dark;
+
+  --bg: #151a20;
+  --surface: #1d2430;
+  --surface-raised: #232c3a;
+  --border: #2a3442;
+  --text: #eaf2f7;
+  --text-muted: #9fb1c1;
+  --accent: #5fd3bc;
+  --accent-hover: #74dcc8;
+  --accent-strong: #329c8c;
+  --accent-ink: #0f1d1b;
+  --secondary: #67c6ff;
+  --danger: #f2777a;
+  --focus: #67c6ff;
+
+  --font-sans: "Geist", "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-full: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+}

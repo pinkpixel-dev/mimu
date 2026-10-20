@@ -1,0 +1,19 @@
+{
+  "name": "@mimu/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "spike:gemma": "tsx scripts/spike-gemma.ts",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@mimu/shared": "workspace:*",
+    "ollama": "^0.6.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
