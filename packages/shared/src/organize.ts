@@ -13,7 +13,6 @@ export const OrganizeResult = z.object({
     is_new: z.boolean(),
   }),
   tags: z.array(z.string().trim().min(1).max(32)).max(8),
-  uncertain: z.array(z.string()).max(5),
 });
 export type OrganizeResult = z.infer<typeof OrganizeResult>;
 

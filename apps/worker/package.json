@@ -6,11 +6,14 @@
   "scripts": {
     "start": "tsx --env-file-if-exists=.env src/main.ts",
     "spike:gemma": "tsx scripts/spike-gemma.ts",
-    "typecheck": "tsc -p ."
+    "spike:uncertain": "tsx scripts/spike-uncertain.ts",
+    "typecheck": "tsc -p .",
+    "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
     "@mimu/shared": "workspace:*",
-    "ollama": "^0.6.4"
+    "ollama": "^0.6.4",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

@@ -1,9 +1,12 @@
 import type { Ollama } from "ollama";
 import { OrganizeResult, organizeJsonSchema } from "@mimu/shared";
+import { findMisheard } from "./misheard.ts";
 import { ORGANIZE_SYSTEM_PROMPT, buildOrganizeUserMessage } from "./prompt.ts";
 
+export type OrganizedNote = OrganizeResult & { uncertain: string[] };
+
 export interface OrganizeOutcome {
-  result: OrganizeResult;
+  result: OrganizedNote;
   attempts: number;
   durationMs: number;
 }
@@ -21,6 +24,7 @@ export class OrganizeError extends Error {
 /**
  * Ask Gemma to structure one raw transcript. Output is schema-constrained by Ollama and then
  * validated again with Zod; one retry on invalid output before giving up.
+ * A separate small pass flags phrases that look misheard.
  */
 export async function organizeNote(
   client: Ollama,
@@ -54,7 +58,9 @@ export async function organizeNote(
 
     const validated = OrganizeResult.safeParse(parsed);
     if (validated.success) {
-      return { result: validated.data, attempts: attempt, durationMs: performance.now() - started };
+      // A failed misheard check shouldn't lose a good organize result.
+      const uncertain = await findMisheard(client, model, rawText).catch(() => []);
+      return { result: { ...validated.data, uncertain }, attempts: attempt, durationMs: performance.now() - started };
     }
     lastError = validated.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
   }
