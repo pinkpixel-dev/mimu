@@ -9,8 +9,9 @@
     "deploy": "pnpm --filter @mimu/web build && wrangler deploy",
     "migrate": "tsx scripts/migrate.ts",
     "quickstart": "tsx scripts/quickstart.ts",
+    "hosted-setup": "tsx scripts/hosted-setup.ts",
     "typecheck": "tsc -p .",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

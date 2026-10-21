@@ -135,3 +135,26 @@
 .command__copy {
   min-width: 96px;
 }
+
+.account__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.account__line {
+  margin: 0;
+  font-size: 14px;
+}
+
+.account__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.account__confirm {
+  flex-basis: 100%;
+  font-size: 14px;
+}

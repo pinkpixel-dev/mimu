@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import type { ApiClient } from "../../lib/api/client.ts";
 import type { Connection } from "../../lib/connection.ts";
+import { AccountPanel } from "./AccountPanel.tsx";
 import "./desktop.css";
 
 interface Props {
   api: ApiClient;
   connection: Connection;
+  onSignOut: () => void;
 }
 
 /** The API refreshes the worker's check-in once a minute and the worker polls every 10s, so 3 min means it's gone. */
@@ -18,7 +20,7 @@ export function desktopCommand({ apiUrl, accessKey }: Connection, showKey = true
 }
 
 /** One-time pairing for the desktop worker: a copyable command with this device's URL and key filled in. */
-export function DesktopView({ api, connection }: Props) {
+export function DesktopView({ api, connection, onSignOut }: Props) {
   const [seenAt, setSeenAt] = useState<string | null | undefined>(undefined);
   const [now, setNow] = useState(() => Date.now());
   const [showKey, setShowKey] = useState(false);
@@ -100,6 +102,8 @@ export function DesktopView({ api, connection }: Props) {
           </p>
         </li>
       </ol>
+
+      <AccountPanel api={api} connection={connection} onSignOut={onSignOut} />
     </div>
   );
 }

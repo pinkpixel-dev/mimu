@@ -4,7 +4,13 @@ import type { Client } from "@libsql/client";
  * Ordered schema migrations. Each one runs once, inside a single batch, and is recorded in schema_migrations.
  * Never edit a migration that has shipped; add a new one.
  */
-export const MIGRATIONS: { version: number; name: string; statements: string[] }[] = [
+export interface Migration {
+  version: number;
+  name: string;
+  statements: string[];
+}
+
+export const MIGRATIONS: Migration[] = [
   {
     version: 1,
     name: "initial schema",
@@ -90,7 +96,7 @@ export const MIGRATIONS: { version: number; name: string; statements: string[] }
   },
 ];
 
-export async function migrate(db: Client): Promise<number[]> {
+export async function migrate(db: Client, migrations: readonly Migration[] = MIGRATIONS): Promise<number[]> {
   await db.execute(
     `CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at TEXT NOT NULL)`,
   );
@@ -98,7 +104,7 @@ export async function migrate(db: Client): Promise<number[]> {
     (await db.execute("SELECT version FROM schema_migrations")).rows.map((row) => Number(row.version)),
   );
   const ran: number[] = [];
-  for (const migration of MIGRATIONS) {
+  for (const migration of migrations) {
     if (applied.has(migration.version)) continue;
     await db.batch(
       [

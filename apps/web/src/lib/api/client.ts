@@ -1,5 +1,6 @@
 import type { Ask, CaptureInput, Note, NotePatch, WorkerStatus } from "@mimu/shared";
 import { normalizeApiUrl, type Connection } from "../connection.ts";
+import type { DemoAccount } from "./hosted.ts";
 
 /** Distinguishes "the server said no" from "couldn't reach the server", which the outbox treats differently. */
 export class ApiError extends Error {
@@ -121,5 +122,23 @@ export class ApiClient {
 
   workerStatus(): Promise<WorkerStatus> {
     return this.request<WorkerStatus>("/worker/status");
+  }
+
+  /** The signed-in demo account, or null on a single-user install (or for the owner's key on a hosted one). */
+  async demoAccount(): Promise<DemoAccount | null> {
+    try {
+      return await this.request<DemoAccount>("/account");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) return null;
+      throw error;
+    }
+  }
+
+  async githubLinkUrl(): Promise<string> {
+    return (await this.request<{ url: string }>("/auth/github/link", { method: "POST" })).url;
+  }
+
+  async deleteDemoAccount(): Promise<void> {
+    await this.request("/account", { method: "DELETE" });
   }
 }

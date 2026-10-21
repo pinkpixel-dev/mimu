@@ -29,6 +29,7 @@
     "prepack": "pnpm run build",
     "spike:gemma": "tsx scripts/spike-gemma.ts",
     "spike:uncertain": "tsx scripts/spike-uncertain.ts",
+    "seed:build": "tsx scripts/build-seed.ts",
     "typecheck": "tsc -p .",
     "test": "node --import tsx --test \"src/**/*.test.ts\""
   },

@@ -73,7 +73,7 @@ export function Shell({ api, connection, outbox, onReconnect }: Props) {
         )}
         {inDesktop && (
           <div className="shell__pane">
-            <DesktopView api={api} connection={connection} />
+            <DesktopView api={api} connection={connection} onSignOut={onReconnect} />
           </div>
         )}
       </div>

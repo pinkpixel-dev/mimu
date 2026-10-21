@@ -12,5 +12,9 @@
   },
   // Secrets (set with `wrangler secret put`, or apps/api/.dev.vars locally):
   // TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, MIMU_ACCESS_KEY
+  // The hosted demo adds TURSO_PLATFORM_TOKEN, TURSO_ORG, TURSO_GROUP_TOKEN, MIMU_ACCOUNTS_DB_URL, and optionally
+  // TURSO_GROUP, MIMU_DEMO_MAX_ACCOUNTS, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET (see scripts/hosted-setup.ts).
+  // Daily sweep that deletes demo accounts unused for 30 days. Does nothing on a single-user install.
+  "triggers": { "crons": ["17 9 * * *"] },
   "observability": { "enabled": true }
 }
