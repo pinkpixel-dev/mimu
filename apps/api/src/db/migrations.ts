@@ -62,6 +62,12 @@ export const MIGRATIONS: { version: number; name: string; statements: string[] }
       END`,
     ],
   },
+  {
+    version: 2,
+    name: "uncertain phrases",
+    // JSON array of phrases Gemma couldn't make sense of (likely misheard), shown next to the transcript.
+    statements: [`ALTER TABLE notes ADD COLUMN uncertain TEXT NOT NULL DEFAULT '[]'`],
+  },
 ];
 
 export async function migrate(db: Client): Promise<number[]> {

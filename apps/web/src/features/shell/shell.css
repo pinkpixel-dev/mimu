@@ -1,0 +1,145 @@
+/* Phone: one pane plus a bottom tab bar. Desktop (900px+): sidebar plus the main area, no tab bar. */
+.shell {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.shell__main {
+  min-height: 0;
+  min-width: 0;
+}
+
+.shell__pane {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.shell__pane[hidden] {
+  display: none;
+}
+
+.sidebar {
+  display: none;
+}
+
+.tabbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabbar__tab {
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.tabbar__tab[aria-current="page"] {
+  color: var(--accent);
+}
+
+@media (min-width: 900px) {
+  .shell {
+    grid-template-rows: none;
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .tabbar {
+    display: none;
+  }
+
+  /* The sidebar carries the brand and sync status on desktop. */
+  .capture__header {
+    display: none;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-3);
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    overflow-y: auto;
+  }
+}
+
+.sidebar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-2) var(--space-3);
+}
+
+.sidebar__brand {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sidebar__heading {
+  margin: var(--space-4) var(--space-2) var(--space-1);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sidebar__group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.nav-item:hover {
+  background: var(--surface-raised);
+}
+
+.nav-item[aria-current="page"] {
+  background: var(--surface-raised);
+  color: var(--accent);
+}
+
+.nav-item__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-item__count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}

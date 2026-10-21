@@ -1,4 +1,4 @@
-import type { CaptureInput, Note } from "@mimu/shared";
+import type { CaptureInput, Note, NotePatch, WorkerStatus } from "@mimu/shared";
 import { normalizeApiUrl, type Connection } from "../connection.ts";
 
 /** Distinguishes "the server said no" from "couldn't reach the server", which the outbox treats differently. */
@@ -10,6 +10,24 @@ export class ApiError extends Error {
     super(message);
     this.name = "ApiError";
   }
+}
+
+export interface Category {
+  name: string;
+  slug: string;
+  count: number;
+}
+
+export interface Tag {
+  slug: string;
+  count: number;
+}
+
+export interface NoteFilters {
+  status?: "unsorted";
+  category?: string;
+  tag?: string;
+  q?: string;
 }
 
 export class ApiClient {
@@ -42,5 +60,39 @@ export class ApiClient {
 
   createNote(input: CaptureInput): Promise<Note> {
     return this.request<Note>("/notes", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  async listNotes(filters: NoteFilters, signal?: AbortSignal): Promise<Note[]> {
+    const params = new URLSearchParams({ limit: "200" });
+    for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
+    return (await this.request<{ notes: Note[] }>(`/notes?${params}`, { signal })).notes;
+  }
+
+  getNote(id: string): Promise<Note> {
+    return this.request<Note>(`/notes/${encodeURIComponent(id)}`);
+  }
+
+  patchNote(id: string, patch: NotePatch): Promise<Note> {
+    return this.request<Note>(`/notes/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(patch) });
+  }
+
+  async deleteNote(id: string): Promise<void> {
+    await this.request(`/notes/${encodeURIComponent(id)}`, { method: "DELETE" });
+  }
+
+  async categories(): Promise<Category[]> {
+    return (await this.request<{ categories: Category[] }>("/categories")).categories;
+  }
+
+  async tags(): Promise<Tag[]> {
+    return (await this.request<{ tags: Tag[] }>("/tags")).tags;
+  }
+
+  async requestOrganize(): Promise<void> {
+    await this.request("/organize", { method: "POST" });
+  }
+
+  workerStatus(): Promise<WorkerStatus> {
+    return this.request<WorkerStatus>("/worker/status");
   }
 }

@@ -1,5 +1,5 @@
 import type { Client } from "@libsql/client";
-import { CLAIM_TTL_MS, MAX_ATTEMPTS, RETRY_BACKOFF_MS, type ClaimedNote, type CompleteInput, type FailInput, type WorkerStatus } from "@mimu/shared";
+import { CLAIM_TTL_MS, MAX_ATTEMPTS, RETRY_BACKOFF_MS, type ClaimedNote, type CompleteData, type FailInput, type WorkerStatus } from "@mimu/shared";
 import { resolveCategory, setTags } from "./taxonomy.ts";
 
 /**
@@ -37,7 +37,7 @@ export async function claimNotes(db: Client, limit: number, now = new Date()): P
 export type CompleteOutcome = "completed" | "not_found" | "stale_claim";
 
 /** Write Gemma's result. Only succeeds if this worker still holds the claim and nobody edited the note meanwhile. */
-export async function completeNote(db: Client, id: string, input: CompleteInput): Promise<CompleteOutcome> {
+export async function completeNote(db: Client, id: string, input: CompleteData): Promise<CompleteOutcome> {
   const tx = await db.transaction("write");
   try {
     const row = (
@@ -56,11 +56,22 @@ export async function completeNote(db: Client, id: string, input: CompleteInput)
     const now = new Date().toISOString();
     await tx.execute({
       sql: `UPDATE notes SET
-              title = ?, markdown = ?, summary = ?, category_id = ?, status = 'processed',
+              title = ?, markdown = ?, summary = ?, category_id = ?, uncertain = ?, status = 'processed',
               attempt_count = attempt_count + 1, error_message = NULL, claim_token = NULL, claimed_at = NULL,
               model_id = ?, processing_version = ?, processed_at = ?, updated_at = ?
             WHERE id = ?`,
-      args: [input.title, input.markdown, input.summary, categoryId, input.model_id, input.processing_version, now, now, id],
+      args: [
+        input.title,
+        input.markdown,
+        input.summary,
+        categoryId,
+        JSON.stringify(input.uncertain),
+        input.model_id,
+        input.processing_version,
+        now,
+        now,
+        id,
+      ],
     });
     await tx.commit();
     return "completed";

@@ -205,23 +205,3 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
-
-.chip {
-  min-height: 36px;
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border);
-  background: var(--surface-raised);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out);
-}
-
-.chip:hover:not(:disabled) {
-  border-color: var(--accent-strong);
-}
-
-.chip:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}

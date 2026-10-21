@@ -25,7 +25,8 @@ export const NotePatch = z
 export type NotePatch = z.infer<typeof NotePatch>;
 
 export const NoteQuery = z.object({
-  status: NoteStatus.optional(),
+  /** "unsorted" means anything not processed yet: pending, processing, or failed. */
+  status: z.union([NoteStatus, z.literal("unsorted")]).optional(),
   category: z.string().optional(),
   tag: z.string().optional(),
   q: z.string().trim().max(200).optional(),
@@ -45,6 +46,7 @@ export const Note = z.object({
   category: z.string().nullable(),
   category_slug: z.string().nullable(),
   tags: z.array(z.string()),
+  uncertain: z.array(z.string()),
   status: NoteStatus,
   user_edited: z.boolean(),
   attempt_count: z.number().int(),

@@ -47,6 +47,7 @@ export class OrganizeRunner {
               summary: organized.summary,
               category: organized.category.name,
               tags: organized.tags,
+              uncertain: organized.uncertain,
               model_id: this.model,
               processing_version: PROCESSING_VERSION,
             });

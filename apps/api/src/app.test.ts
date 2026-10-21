@@ -143,6 +143,19 @@ describe("worker flow", () => {
     assert.deepEqual(after.body.tags, ["mine"]);
   });
 
+  test("stores the phrases Gemma wasn't sure about", async () => {
+    const note = await capture("keep stealing ingredients and mercy");
+    const [claim] = await claimAll();
+    const done = await call<Note>("POST", `/worker/complete/${note.id}`, {
+      ...organized(claim!, "Project Ideas"),
+      uncertain: ["stealing ingredients and mercy"],
+    });
+    assert.deepEqual(done.body.uncertain, ["stealing ingredients and mercy"]);
+    assert.deepEqual((await call<Note>("GET", `/notes/${note.id}`)).body.uncertain, ["stealing ingredients and mercy"]);
+    const plain = await capture("no uncertainty here");
+    assert.deepEqual(plain.uncertain, []);
+  });
+
   test("organize requests show up in worker status", async () => {
     await capture("pending one");
     const requested = await call<{ organize_requested_at: string }>("POST", "/organize");
@@ -170,6 +183,9 @@ describe("library queries", () => {
     assert.equal(byTag.body.notes.length, 1);
     const pending = await call<{ notes: Note[] }>("GET", "/notes?status=pending");
     assert.ok(pending.body.notes.every((n) => n.status === "pending"));
+    const unsorted = await call<{ notes: Note[] }>("GET", "/notes?status=unsorted");
+    assert.ok(unsorted.body.notes.length > 0);
+    assert.ok(unsorted.body.notes.every((n) => n.status !== "processed"));
   });
 
   test("deletes notes and their tags", async () => {

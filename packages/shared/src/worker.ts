@@ -29,10 +29,14 @@ export const CompleteInput = z.object({
   summary: z.string().trim().min(1).max(280),
   category: z.string().trim().min(1).max(40),
   tags: z.array(z.string()).max(12),
+  uncertain: z.array(z.string().trim().min(1).max(200)).max(5).default([]),
   model_id: z.string().min(1).max(80),
   processing_version: z.number().int().min(1),
 });
-export type CompleteInput = z.infer<typeof CompleteInput>;
+/** What the worker sends (optional fields may be omitted). */
+export type CompleteInput = z.input<typeof CompleteInput>;
+/** What the API works with after validation (defaults applied). */
+export type CompleteData = z.output<typeof CompleteInput>;
 
 export const FailInput = z.object({
   claim_token: z.string().min(1),

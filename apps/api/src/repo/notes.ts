@@ -4,11 +4,20 @@ import { resolveCategory, setTags } from "./taxonomy.ts";
 
 const NOTE_COLUMNS = `
   n.id, n.raw_text, n.title, n.markdown, n.summary, n.status, n.user_edited, n.attempt_count,
-  n.error_message, n.model_id, n.created_at, n.updated_at, n.processed_at,
+  n.error_message, n.model_id, n.created_at, n.updated_at, n.processed_at, n.uncertain,
   c.name AS category, c.slug AS category_slug,
   (SELECT group_concat(tag, ',') FROM note_tags WHERE note_id = n.id) AS tags`;
 
 const str = (value: unknown) => (value === null || value === undefined ? null : String(value));
+
+function jsonList(value: unknown): string[] {
+  try {
+    const parsed: unknown = JSON.parse(String(value ?? "[]"));
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
 
 function rowToNote(row: Row): Note {
   return {
@@ -20,6 +29,7 @@ function rowToNote(row: Row): Note {
     category: str(row.category),
     category_slug: str(row.category_slug),
     tags: row.tags ? String(row.tags).split(",").sort() : [],
+    uncertain: jsonList(row.uncertain),
     status: String(row.status) as NoteStatus,
     user_edited: Number(row.user_edited) === 1,
     attempt_count: Number(row.attempt_count),
@@ -77,7 +87,9 @@ export async function listNotes(db: Client, query: NoteQuery): Promise<Note[]> {
     args.push(fts);
     order = "f.rank, n.created_at DESC";
   }
-  if (query.status) {
+  if (query.status === "unsorted") {
+    where.push("n.status != 'processed'");
+  } else if (query.status) {
     where.push("n.status = ?");
     args.push(query.status);
   }

@@ -3,11 +3,12 @@ import { ApiClient } from "./lib/api/client.ts";
 import { clearConnection, loadConnection, type Connection } from "./lib/connection.ts";
 import { Outbox } from "./lib/outbox/outbox.ts";
 import { ConnectScreen } from "./features/connect/ConnectScreen.tsx";
-import { CaptureScreen } from "./features/capture/CaptureScreen.tsx";
+import { Shell } from "./features/shell/Shell.tsx";
 
 export function App() {
   const [connection, setConnection] = useState<Connection | null>(() => loadConnection());
-  const outbox = useMemo(() => (connection ? new Outbox(new ApiClient(connection)) : null), [connection]);
+  const api = useMemo(() => (connection ? new ApiClient(connection) : null), [connection]);
+  const outbox = useMemo(() => (api ? new Outbox(api) : null), [api]);
 
   // Retry queued captures whenever there's a decent chance the network is back.
   useEffect(() => {
@@ -23,10 +24,11 @@ export function App() {
     };
   }, [outbox]);
 
-  if (!connection || !outbox) return <ConnectScreen onConnected={setConnection} />;
+  if (!api || !outbox) return <ConnectScreen onConnected={setConnection} />;
 
   return (
-    <CaptureScreen
+    <Shell
+      api={api}
       outbox={outbox}
       onReconnect={() => {
         clearConnection();
