@@ -35,6 +35,16 @@ export class Outbox {
     return capture;
   }
 
+  /**
+   * For signing out of an account: try one last upload, then drop anything still queued so it can't end up
+   * in whichever account signs in next on this device.
+   */
+  async clearForSignOut(): Promise<void> {
+    await this.flush().catch(() => undefined);
+    await outboxStore.clear();
+    this.emit({ status: "idle", pending: 0 });
+  }
+
   /** Upload everything queued. Concurrent calls share one run. */
   flush(): Promise<void> {
     this.flushing ??= this.drain().finally(() => {

@@ -18,9 +18,10 @@ interface Props {
   connection: Connection;
   outbox: Outbox;
   onReconnect: () => void;
+  onSignOut: () => Promise<void>;
 }
 
-export function Shell({ api, connection, outbox, onReconnect }: Props) {
+export function Shell({ api, connection, outbox, onReconnect, onSignOut }: Props) {
   const [route, navigate] = useRoute();
   const [filter, setFilter] = useState<LibraryFilter>({ kind: "all" });
   const { categories, tags, refresh } = useTaxonomy(api);
@@ -29,6 +30,7 @@ export function Shell({ api, connection, outbox, onReconnect }: Props) {
   const inDesktop = route.view === "desktop";
   const inAccount = route.view === "account";
   const isDemo = useIsDemoAccount(api);
+  const workerNeverSeen = useWorkerNeverSeen(api);
 
   const showFilter = (next: LibraryFilter) => {
     setFilter(next);
@@ -58,6 +60,7 @@ export function Shell({ api, connection, outbox, onReconnect }: Props) {
             outbox={outbox}
             onReconnect={onReconnect}
             onAccount={isDemo ? () => navigate({ view: "account" }) : undefined}
+            onSetUpDesktop={workerNeverSeen ? () => navigate({ view: "desktop" }) : undefined}
           />
         </div>
         {inLibrary && (
@@ -86,7 +89,7 @@ export function Shell({ api, connection, outbox, onReconnect }: Props) {
         )}
         {inAccount && (
           <div className="shell__pane">
-            <AccountView api={api} connection={connection} onSignOut={onReconnect} />
+            <AccountView api={api} connection={connection} onSignOut={onSignOut} />
           </div>
         )}
       </div>
@@ -131,6 +134,34 @@ function useIsDemoAccount(api: ApiClient): boolean {
     };
   }, [api]);
   return isDemo;
+}
+
+const WORKER_CHECK_MS = 30_000;
+
+/** True until a desktop worker has checked in at least once. Re-checks while it's still waiting. */
+function useWorkerNeverSeen(api: ApiClient): boolean {
+  const [neverSeen, setNeverSeen] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const check = async () => {
+      try {
+        const { worker_seen_at } = await api.workerStatus();
+        if (cancelled) return;
+        setNeverSeen(worker_seen_at === null);
+        if (worker_seen_at !== null) return;
+      } catch {
+        // Offline or the API hiccuped; try again later without showing anything new.
+      }
+      if (!cancelled) timer = setTimeout(() => void check(), WORKER_CHECK_MS);
+    };
+    void check();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [api]);
+  return neverSeen;
 }
 
 const glyph = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" } as const;

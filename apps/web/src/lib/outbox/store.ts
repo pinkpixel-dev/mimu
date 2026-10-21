@@ -32,4 +32,5 @@ export const outboxStore = {
   put: (capture: CaptureInput) => run("readwrite", (store) => store.put(capture)).then(() => undefined),
   remove: (id: string) => run("readwrite", (store) => store.delete(id)).then(() => undefined),
   all: () => run<CaptureInput[]>("readonly", (store) => store.getAll()),
+  clear: () => run("readwrite", (store) => store.clear()).then(() => undefined),
 };

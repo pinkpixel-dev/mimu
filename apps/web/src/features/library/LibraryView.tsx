@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ApiClient, Category, Tag } from "../../lib/api/client.ts";
 import type { Route } from "../../lib/router.ts";
 import { EmptyState } from "./EmptyState.tsx";
@@ -23,7 +23,14 @@ interface Props {
 export function LibraryView({ api, route, navigate, filter, onFilter, categories, tags, onTaxonomyChanged }: Props) {
   const [search, setSearch] = useState("");
   const [organize, setOrganize] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const { state, reload } = useNotes(api, filter, search, true);
+  const { state, reload, unsorted, boost } = useNotes(api, filter, search, true);
+
+  // When notes get organized, new categories and tags may exist, so refresh the sidebar counts.
+  const previousUnsorted = useRef(unsorted);
+  useEffect(() => {
+    if (unsorted < previousUnsorted.current) onTaxonomyChanged();
+    previousUnsorted.current = unsorted;
+  }, [unsorted, onTaxonomyChanged]);
   const selectedId = route.view === "note" ? route.id : null;
 
   async function organizeNow() {
@@ -31,6 +38,7 @@ export function LibraryView({ api, route, navigate, filter, onFilter, categories
     try {
       await api.requestOrganize();
       setOrganize("sent");
+      boost();
     } catch {
       setOrganize("error");
     }

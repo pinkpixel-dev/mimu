@@ -23,9 +23,11 @@ interface Props {
   onReconnect: () => void;
   /** Shown on phones for demo accounts, where the sidebar (and its Account link) is hidden. */
   onAccount?: () => void;
+  /** Set while no desktop worker has ever connected, since notes wait for one to get organized. */
+  onSetUpDesktop?: () => void;
 }
 
-export function CaptureScreen({ outbox, onReconnect, onAccount }: Props) {
+export function CaptureScreen({ outbox, onReconnect, onAccount, onSetUpDesktop }: Props) {
   const { model, detected, load, transcribe } = useTranscriber();
   const recorderRef = useRef(new Recorder());
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
@@ -163,6 +165,14 @@ export function CaptureScreen({ outbox, onReconnect, onAccount }: Props) {
               <button type="button" className="button button--ghost" onClick={() => setPhase({ name: "review", text: "", typed: true })}>
                 Type instead
               </button>
+            )}
+            {onSetUpDesktop && !recording && !busy && (
+              <p className="capture__nudge">
+                Your computer organizes notes.{" "}
+                <button type="button" className="link-button" onClick={onSetUpDesktop}>
+                  Set it up
+                </button>
+              </p>
             )}
           </>
         )}

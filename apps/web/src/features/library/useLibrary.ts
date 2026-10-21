@@ -6,6 +6,9 @@ import { toQuery, type LibraryFilter } from "./filters.ts";
 const SEARCH_DEBOUNCE_MS = 250;
 /** While anything is still waiting to be organized, check back this often so notes flip to organized on their own. */
 const UNSORTED_REFRESH_MS = 15_000;
+/** Right after Organize now, check much more often so notes flip as soon as Gemma is done. */
+const BOOSTED_REFRESH_MS = 2500;
+const BOOST_DURATION_MS = 60_000;
 
 export type NotesState =
   | { status: "loading"; notes: Note[] }
@@ -31,6 +34,7 @@ export function useTaxonomy(api: ApiClient) {
 export function useNotes(api: ApiClient, filter: LibraryFilter, search: string, active: boolean) {
   const [state, setState] = useState<NotesState>({ status: "loading", notes: [] });
   const [query, setQuery] = useState(() => toQuery(filter, search));
+  const [boosted, setBoosted] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
 
   // Debounce typing; filter changes apply immediately. (`query` is read but deliberately not a dependency.)
@@ -64,12 +68,21 @@ export function useNotes(api: ApiClient, filter: LibraryFilter, search: string, 
     return () => controllerRef.current?.abort();
   }, [active, load]);
 
-  const hasUnsorted = state.notes.some((note) => note.status !== "processed");
+  const unsorted = state.notes.filter((note) => note.status !== "processed").length;
   useEffect(() => {
-    if (!active || !hasUnsorted) return;
-    const timer = setInterval(() => void load(true), UNSORTED_REFRESH_MS);
+    if (!active || unsorted === 0) return;
+    const timer = setInterval(() => void load(true), boosted ? BOOSTED_REFRESH_MS : UNSORTED_REFRESH_MS);
     return () => clearInterval(timer);
-  }, [active, hasUnsorted, load]);
+  }, [active, unsorted > 0, boosted, load]);
 
-  return { state, reload: load };
+  useEffect(() => {
+    if (!boosted) return;
+    const timer = setTimeout(() => setBoosted(false), BOOST_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [boosted]);
+
+  /** Call after Organize now: poll every few seconds for a minute instead of every 15. */
+  const boost = useCallback(() => setBoosted(true), []);
+
+  return { state, reload: load, unsorted, boost };
 }

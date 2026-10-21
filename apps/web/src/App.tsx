@@ -36,6 +36,12 @@ export function App() {
       connection={connection}
       outbox={outbox}
       onReconnect={() => {
+        // A rejected key keeps the queue: the same person is just re-entering a changed key.
+        clearConnection();
+        setConnection(null);
+      }}
+      onSignOut={async () => {
+        await outbox.clearForSignOut();
         clearConnection();
         setConnection(null);
       }}

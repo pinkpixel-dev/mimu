@@ -18,6 +18,8 @@ The first version of Mimu, built for the Hacktoberfest 2026 Week 3 challenge.
 - Suggested categories get matched to existing ones, so near-duplicates like "Developer Tool" and "Developer Tools" don't pile up.
 - A separate Gemma pass flags phrases that look misheard. They show up as "Mimu wasn't sure about" instead of being quietly rewritten.
 - Notes get organized at startup, every hour, and when you tap **Organize now** (checked every 10 seconds).
+- After **Organize now**, the library checks every few seconds for a minute, so notes switch to organized right after Gemma finishes.
+- Until a desktop worker has connected, the capture screen shows a short "Set it up" link to the Desktop page.
 
 ### 📚 Library and Ask
 
@@ -44,4 +46,5 @@ The first version of Mimu, built for the Hacktoberfest 2026 Week 3 challenge.
 ### 🐛 Fixes
 
 - The Speech runtime panel no longer stretches to fill the capture screen on wide displays.
+- Signing out or deleting a demo account clears captures still waiting to upload on that device, so they can't land in the next account that signs in there.
 - The worker explains an HTML response as a missing `/api` at the end of `MIMU_API_URL`.
