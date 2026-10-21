@@ -21,9 +21,11 @@ const SAVED_DISPLAY_MS = 2200;
 interface Props {
   outbox: Outbox;
   onReconnect: () => void;
+  /** Shown on phones for demo accounts, where the sidebar (and its Account link) is hidden. */
+  onAccount?: () => void;
 }
 
-export function CaptureScreen({ outbox, onReconnect }: Props) {
+export function CaptureScreen({ outbox, onReconnect, onAccount }: Props) {
   const { model, detected, load, transcribe } = useTranscriber();
   const recorderRef = useRef(new Recorder());
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
@@ -98,7 +100,14 @@ export function CaptureScreen({ outbox, onReconnect }: Props) {
     <main className="capture">
       <header className="capture__header">
         <span className="capture__brand">Mimu</span>
-        <SyncBadge outbox={outbox} onReconnect={onReconnect} />
+        <div className="capture__header-actions">
+          <SyncBadge outbox={outbox} onReconnect={onReconnect} />
+          {onAccount && (
+            <button type="button" className="chip" onClick={onAccount}>
+              Account
+            </button>
+          )}
+        </div>
       </header>
 
       <section className="capture__stage" aria-live="polite">
@@ -142,7 +151,7 @@ export function CaptureScreen({ outbox, onReconnect }: Props) {
               aria-label={micLabel}
               title={micLabel}
             >
-              <MicIcon />
+              {recording ? <StopIcon /> : <MicIcon />}
             </button>
             <p className="capture__status">{status}</p>
             {phase.name === "error" && (
@@ -170,6 +179,14 @@ function MicIcon() {
       <rect x="9" y="3" width="6" height="11" rx="3" />
       <path d="M5 11a7 7 0 0 0 14 0" />
       <path d="M12 18v3" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" fill="currentColor">
+      <rect x="6" y="6" width="12" height="12" rx="2" />
     </svg>
   );
 }

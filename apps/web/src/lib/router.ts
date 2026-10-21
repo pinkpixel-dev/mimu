@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 /**
- * Tiny hash router: capture (#/), the library (#/library), one note (#/note/<id>), Ask (#/ask), or Desktop (#/desktop).
+ * Tiny hash router: capture (#/), the library (#/library), one note (#/note/<id>), Ask (#/ask), Desktop (#/desktop), or Account (#/account).
  * Hash routes keep the phone's back button working without any server-side routing.
  */
 export type Route =
@@ -9,6 +9,7 @@ export type Route =
   | { view: "library" }
   | { view: "ask" }
   | { view: "desktop" }
+  | { view: "account" }
   | { view: "note"; id: string };
 
 export function parseHash(hash: string): Route {
@@ -18,6 +19,7 @@ export function parseHash(hash: string): Route {
   if (path.startsWith("/library")) return { view: "library" };
   if (path.startsWith("/ask")) return { view: "ask" };
   if (path.startsWith("/desktop")) return { view: "desktop" };
+  if (path.startsWith("/account")) return { view: "account" };
   return { view: "capture" };
 }
 
@@ -25,6 +27,7 @@ export function routeHref(route: Route): string {
   if (route.view === "note") return `#/note/${encodeURIComponent(route.id)}`;
   if (route.view === "ask") return "#/ask";
   if (route.view === "desktop") return "#/desktop";
+  if (route.view === "account") return "#/account";
   return route.view === "library" ? "#/library" : "#/";
 }
 

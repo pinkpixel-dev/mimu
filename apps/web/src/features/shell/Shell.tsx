@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ApiClient } from "../../lib/api/client.ts";
 import type { Connection } from "../../lib/connection.ts";
 import type { Outbox } from "../../lib/outbox/outbox.ts";
 import { useRoute } from "../../lib/router.ts";
+import { AccountView } from "../account/AccountView.tsx";
 import { AskView } from "../ask/AskView.tsx";
 import { CaptureScreen } from "../capture/CaptureScreen.tsx";
 import { DesktopView } from "../desktop/DesktopView.tsx";
@@ -26,6 +27,8 @@ export function Shell({ api, connection, outbox, onReconnect }: Props) {
   const inLibrary = route.view === "library" || route.view === "note";
   const inAsk = route.view === "ask";
   const inDesktop = route.view === "desktop";
+  const inAccount = route.view === "account";
+  const isDemo = useIsDemoAccount(api);
 
   const showFilter = (next: LibraryFilter) => {
     setFilter(next);
@@ -43,14 +46,19 @@ export function Shell({ api, connection, outbox, onReconnect }: Props) {
         onCapture={() => navigate({ view: "capture" })}
         onAsk={() => navigate({ view: "ask" })}
         onDesktop={() => navigate({ view: "desktop" })}
+        onAccount={isDemo ? () => navigate({ view: "account" }) : undefined}
         onFilter={showFilter}
         onReconnect={onReconnect}
       />
 
       <div className="shell__main">
         {/* Capture stays mounted so switching tabs doesn't reload the speech model. */}
-        <div className="shell__pane" hidden={inLibrary || inAsk || inDesktop}>
-          <CaptureScreen outbox={outbox} onReconnect={onReconnect} />
+        <div className="shell__pane" hidden={inLibrary || inAsk || inDesktop || inAccount}>
+          <CaptureScreen
+            outbox={outbox}
+            onReconnect={onReconnect}
+            onAccount={isDemo ? () => navigate({ view: "account" }) : undefined}
+          />
         </div>
         {inLibrary && (
           <div className="shell__pane">
@@ -73,7 +81,12 @@ export function Shell({ api, connection, outbox, onReconnect }: Props) {
         )}
         {inDesktop && (
           <div className="shell__pane">
-            <DesktopView api={api} connection={connection} onSignOut={onReconnect} />
+            <DesktopView api={api} connection={connection} />
+          </div>
+        )}
+        {inAccount && (
+          <div className="shell__pane">
+            <AccountView api={api} connection={connection} onSignOut={onReconnect} />
           </div>
         )}
       </div>
@@ -102,6 +115,22 @@ export function Shell({ api, connection, outbox, onReconnect }: Props) {
       </nav>
     </div>
   );
+}
+
+/** Whether this key belongs to a hosted demo account (and not a single-user install or the owner). */
+function useIsDemoAccount(api: ApiClient): boolean {
+  const [isDemo, setIsDemo] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .demoAccount()
+      .then((account) => !cancelled && setIsDemo(account !== null))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+  return isDemo;
 }
 
 const glyph = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" } as const;

@@ -55,12 +55,20 @@
   }
 }
 
+.capture__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .capture__brand {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .capture__stage {
+  /* Explicit rows: on wide screens the header is hidden, and the runtime panel would otherwise take the 1fr row. */
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -156,6 +164,7 @@
 }
 
 .runtime {
+  grid-row: 3;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);

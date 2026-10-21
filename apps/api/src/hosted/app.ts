@@ -217,7 +217,7 @@ export function createHostedApp(deps: HostedDeps) {
 
     if (state.accountId) {
       const linked = await linkGithub(deps.accounts, state.accountId, user.id, user.login);
-      return c.redirect(`${appUrl(c)}/#/desktop?github=${linked ? "linked" : "taken"}`);
+      return c.redirect(`${appUrl(c)}/#/account?github=${linked ? "linked" : "taken"}`);
     }
 
     const account = (await findAccountByGithub(deps.accounts, user.id)) ?? (await createAccount(deps, user));

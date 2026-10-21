@@ -13,12 +13,14 @@ interface Props {
   onCapture: () => void;
   onAsk: () => void;
   onDesktop: () => void;
+  /** Only set for hosted demo accounts. */
+  onAccount?: () => void;
   onFilter: (filter: LibraryFilter) => void;
   onReconnect: () => void;
 }
 
 /** Desktop navigation. Hidden on narrow screens, where the bottom tab bar and filter chips take over. */
-export function Sidebar({ route, filter, categories, tags, outbox, onCapture, onAsk, onDesktop, onFilter, onReconnect }: Props) {
+export function Sidebar({ route, filter, categories, tags, outbox, onCapture, onAsk, onDesktop, onAccount, onFilter, onReconnect }: Props) {
   const inLibrary = route.view === "library" || route.view === "note";
   const item = (target: LibraryFilter, label: string, count?: number) => (
     <li key={label}>
@@ -56,6 +58,13 @@ export function Sidebar({ route, filter, categories, tags, outbox, onCapture, on
             <span className="nav-item__label">Desktop</span>
           </button>
         </li>
+        {onAccount && (
+          <li>
+            <button type="button" className="nav-item" aria-current={route.view === "account" ? "page" : undefined} onClick={onAccount}>
+              <span className="nav-item__label">Account</span>
+            </button>
+          </li>
+        )}
         {item({ kind: "unsorted" }, "Unsorted")}
         {item({ kind: "all" }, "All notes")}
       </ul>

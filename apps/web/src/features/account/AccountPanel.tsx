@@ -14,10 +14,10 @@ const LINK_RESULTS: Record<string, { text: string; error: boolean }> = {
   taken: { text: "That GitHub account already has its own Mimu.", error: true },
 };
 
-/** Coming back from GitHub linking lands on #/desktop?github=linked|taken. */
+/** Coming back from GitHub linking lands on #/account?github=linked|taken. */
 function readLinkResult(): string | null {
   const result = new URLSearchParams(location.hash.split("?")[1] ?? "").get("github");
-  if (result) history.replaceState(null, "", "#/desktop");
+  if (result) history.replaceState(null, "", "#/account");
   return result;
 }
 
