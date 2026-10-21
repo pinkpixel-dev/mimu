@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mimu-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-15",
+  // Secrets (set with `wrangler secret put`, or apps/api/.dev.vars locally):
+  // TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, MIMU_ACCESS_KEY
+  "observability": { "enabled": true }
+}

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "tsx --env-file-if-exists=.env src/main.ts",
     "spike:gemma": "tsx scripts/spike-gemma.ts",
     "typecheck": "tsc -p ."
   },

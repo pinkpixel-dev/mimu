@@ -1,0 +1,28 @@
+{
+  "name": "@mimu/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:local": "tsx scripts/local.ts",
+    "deploy": "wrangler deploy",
+    "migrate": "tsx scripts/migrate.ts",
+    "typecheck": "tsc -p .",
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "@mimu/shared": "workspace:*",
+    "hono": "^4.13.13",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261019.1",
+    "@hono/node-server": "^2.1.5",
+    "@types/node": "^22.19.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.151.3"
+  }
+}

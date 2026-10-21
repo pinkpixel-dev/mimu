@@ -12,6 +12,30 @@ export const CaptureInput = z.object({
 });
 export type CaptureInput = z.infer<typeof CaptureInput>;
 
+/** Manual edits from the library. Any edit marks the note as user-edited so the worker never overwrites it. */
+export const NotePatch = z
+  .object({
+    title: z.string().trim().min(1).max(80),
+    markdown: z.string().trim().min(1),
+    category: z.string().trim().min(1).max(40).nullable(),
+    tags: z.array(z.string()).max(12),
+  })
+  .partial()
+  .refine((patch) => Object.keys(patch).length > 0, "Nothing to update");
+export type NotePatch = z.infer<typeof NotePatch>;
+
+export const NoteQuery = z.object({
+  status: NoteStatus.optional(),
+  category: z.string().optional(),
+  tag: z.string().optional(),
+  q: z.string().trim().max(200).optional(),
+  from: z.iso.datetime({ offset: true }).optional(),
+  to: z.iso.datetime({ offset: true }).optional(),
+  before: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+export type NoteQuery = z.infer<typeof NoteQuery>;
+
 export const Note = z.object({
   id: z.string(),
   raw_text: z.string(),
@@ -19,6 +43,7 @@ export const Note = z.object({
   markdown: z.string().nullable(),
   summary: z.string().nullable(),
   category: z.string().nullable(),
+  category_slug: z.string().nullable(),
   tags: z.array(z.string()),
   status: NoteStatus,
   user_edited: z.boolean(),

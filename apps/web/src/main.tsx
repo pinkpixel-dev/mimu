@@ -1,10 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles/base.css";
-import { CaptureScreen } from "./features/capture/CaptureScreen.tsx";
+import { App } from "./App.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <CaptureScreen />
+    <App />
   </StrictMode>,
 );

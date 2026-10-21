@@ -12,6 +12,9 @@
   },
   "scripts": {
     "dev:web": "pnpm --filter @mimu/web dev",
+    "dev:api": "pnpm --filter @mimu/api dev",
+    "migrate": "pnpm --filter @mimu/api migrate",
+    "worker": "pnpm --filter @mimu/worker start",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
   }
