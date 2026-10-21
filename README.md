@@ -10,6 +10,18 @@ Mimu is a voice notes app for people with too many ideas and not enough patience
 
 The speech recognition runs on your phone, and the organizing runs on your desktop. No paid AI API is involved anywhere.
 
+## Try it
+
+There's a hosted demo at **[mimu.pinkpixel.dev](https://mimu.pinkpixel.dev)**, so you don't need a Turso or Cloudflare account to try Mimu.
+
+1. Open the site and tap **Start a demo** (or **Continue with GitHub**). You get your own Mimu with a few sample notes already in it.
+2. Install [Ollama](https://ollama.com/download) on a computer with a decent GPU.
+3. Open **Desktop** in the sidebar, copy the command, and run it in a terminal on that computer. It installs the Mimu worker and downloads Gemma (a few GB, one time).
+4. Open **Account** and tap **Show QR code**, then scan it with your phone's camera. Your phone is now signed in to the same Mimu.
+5. Talk into your phone and watch the note get organized.
+
+Demo accounts are deleted after 30 days without use, and you can delete yours any time from the Account page. In the demo, your note text is stored in a database on my Turso account. The audio still never leaves your phone, and Gemma still runs on your own computer. If you'd rather keep your notes completely to yourself, set up your own copy (below).
+
 ## How it works
 
 ```text
@@ -43,6 +55,7 @@ The speech recognition runs on your phone, and the organizing runs on your deskt
 - Markdown export with YAML frontmatter, stable note IDs, and a `manifest.json`, which also works in Obsidian
 - Add to Home Screen on iOS for a full-screen app with the Mimu icon
 - Works on phones and desktops: Capture, Library, and Ask tabs on the phone, sidebar plus list and detail panes on a bigger screen
+- Pair your phone by scanning a QR code on the Account page (hosted demo)
 
 ## What you need
 
@@ -51,7 +64,7 @@ The speech recognition runs on your phone, and the organizing runs on your deskt
 - A free **[Cloudflare](https://cloudflare.com)** account (the app and API run on one Worker)
 - A free **[Turso](https://turso.tech)** account (the database)
 
-Mimu is single-user. You deploy your own copy, and one access key protects it.
+Your own copy of Mimu is single-user, protected by one access key. (The hosted demo works differently, with a separate account and database for each person. See [Running a hosted demo](#running-a-hosted-demo) if you want to run one yourself.)
 
 ## Setup
 
@@ -112,7 +125,7 @@ mimu-worker --help
 
 If you'd rather do each step yourself, this is everything the quickstart does.
 
-Create `apps/api/.dev.vars`. The file name starts with a dot, and that matters: the dotted name is the one that's gitignored.
+Create `apps/api/.dev.vars`. The file name starts with a dot, and that matters: the dotted name is the one that's gitignored. `apps/api/.dev.vars.example` lists every setting with a short note on each, so you can copy that and fill it in. For a normal install you only need these three:
 
 ```bash
 TURSO_DATABASE_URL=libsql://your-database.turso.io
@@ -173,6 +186,7 @@ The `.env` file also has optional settings for the Ollama host, the model, how o
 5. Open a note to read it, check the original transcript, **Edit** it, or **Export** it. **Export all** in the library downloads everything.
 6. Open **Ask** and ask about anything you've saved. Answers usually take a few seconds and link to the notes they came from. Your desktop worker needs to be running for this.
 7. Open **Desktop** any time to check whether your desktop worker is connected, or to copy the setup command again.
+8. On the hosted demo, **Account** has the QR code for your phone, GitHub linking, sign out, and delete. It shows up in the sidebar, and as a button at the top of the capture screen on phones.
 
 The first time you open the capture screen, it downloads the Whisper model (about 41 MB). After that, it's cached.
 
@@ -182,6 +196,32 @@ The first time you open the capture screen, it downloads the Whisper model (abou
 - **Your notes live in your own Turso database**, behind your own Worker and access key.
 - **The organizing runs on your own machine** through Ollama. Note text never goes to an AI provider.
 - The browser downloads the Whisper model files from Hugging Face and the ONNX Runtime files from jsDelivr. Neither one sees your audio or notes.
+- **On the hosted demo**, the first two points still hold, but your note text lives in a database on the demo's Turso account instead of yours. Each demo account gets its own database, and it's deleted after 30 days without use or when you delete your account.
+
+## Running a hosted demo
+
+This is how mimu.pinkpixel.dev runs. You don't need it for your own notes, but it's there if you want a public instance where anyone can sign up.
+
+Each sign-up gets its own Turso database, created through the Turso Platform API and filled with sample notes. A separate `mimu-accounts` database keeps track of who owns which database. Your own access key keeps opening your own notes like before.
+
+1. Mint a Turso Platform API token and add it to `apps/api/.dev.vars` as `TURSO_PLATFORM_TOKEN`:
+
+   ```bash
+   turso auth api-tokens mint mimu-demo
+   ```
+
+2. Run the hosted setup. It creates the `mimu-accounts` database, mints a group token that opens every database in the group, and saves the rest of the settings to `.dev.vars`:
+
+   ```bash
+   pnpm --filter @mimu/api hosted-setup
+   ```
+
+3. For GitHub sign-in, create a GitHub OAuth app with the callback URL `https://<your-domain>/api/auth/github/callback`, then add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` to `.dev.vars`. You can skip this step, and people will just use **Start a demo**.
+4. Deploy with `pnpm quickstart`, which uploads everything in `.dev.vars` as Worker secrets.
+
+Sign-ups stop at `MIMU_DEMO_MAX_ACCOUNTS` (50 by default), and a daily Cloudflare cron deletes accounts nobody has used in 30 days. Turso's free plan allows 100 databases, so 50 leaves room for your own.
+
+If `turso auth login` fails with a SQL syntax error, the `turso` on your PATH is probably the npm package `turso` (the new database engine's shell), not the Turso Cloud CLI. The Cloud CLI installs to `~/.turso/turso`.
 
 ## Export format
 
@@ -243,6 +283,13 @@ Open `http://localhost:5173` and connect to `http://127.0.0.1:8788`. To organize
 MIMU_API_URL=http://127.0.0.1:8788 pnpm worker
 ```
 
+To work on the hosted demo locally, start the API in hosted mode. Accounts and their databases go in `apps/api/local-demo/`, and nothing touches Turso Cloud:
+
+```bash
+MIMU_LOCAL_HOSTED=1 pnpm --filter @mimu/api dev:local
+VITE_API_URL=http://127.0.0.1:8788 pnpm dev:web
+```
+
 Tests and type checks:
 
 ```bash
@@ -250,11 +297,12 @@ pnpm test
 pnpm typecheck
 ```
 
-Two small scripts compare models and prompts on sample transcripts:
+Two small scripts compare models and prompts on sample transcripts, and a third rebuilds the hosted demo's sample notes with the real organize pipeline:
 
 ```bash
 pnpm --filter @pinkpixel/mimu-worker spike:gemma gemma4:e4b gemma4:12b
 pnpm --filter @pinkpixel/mimu-worker spike:uncertain gemma4:e4b
+pnpm --filter @pinkpixel/mimu-worker seed:build gemma4:e4b
 ```
 
 ### Project layout
@@ -262,7 +310,7 @@ pnpm --filter @pinkpixel/mimu-worker spike:uncertain gemma4:e4b
 ```text
 apps/
   web/      React + Vite app: capture, library, export, connect screen
-  api/      Hono API on Cloudflare Workers; also serves the built web app
+  api/      Hono API on Cloudflare Workers; also serves the built web app (src/hosted/ is the hosted demo)
   worker/   Node worker that organizes notes with Gemma through Ollama (published as @pinkpixel/mimu-worker)
 packages/
   shared/   Schemas, slug helpers, and the Markdown export format
@@ -271,7 +319,7 @@ assets/     Mascot and app icon
 
 ## Limitations
 
-- Single user, protected by one access key. There are no accounts.
+- Your own copy is single-user, protected by one access key. Accounts only exist on a hosted demo.
 - English only for now (`whisper-tiny.en`).
 - Notes only get organized, and questions only get answered, while your desktop worker is running.
 - Ask Mimu finds notes by keyword (with some help from Gemma picking search words), not by meaning, so a question worded very differently from the note can miss it.
