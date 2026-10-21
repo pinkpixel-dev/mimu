@@ -31,5 +31,9 @@ export function normalizeApiUrl(url: string): string {
   return url.trim().replace(/\/+$/, "");
 }
 
-/** Build-time default so a deployed PWA can prefill its own API. */
-export const DEFAULT_API_URL: string = import.meta.env.VITE_API_URL ?? "";
+/**
+ * Prefill for the connect screen. A production build is served by the same Worker as the API, so it defaults to
+ * this origin's /api. VITE_API_URL overrides that for other setups.
+ */
+export const DEFAULT_API_URL: string =
+  import.meta.env.VITE_API_URL || (import.meta.env.PROD ? `${location.origin}/api` : "");

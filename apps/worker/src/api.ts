@@ -30,7 +30,12 @@ export class MimuApi {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
       throw new ApiError(response.status, body?.error ?? response.statusText);
     }
-    return (response.status === 204 ? null : await response.json()) as T;
+    if (response.status === 204) return null as T;
+    // The deployed Worker serves the web app for any path outside /api, so a missing /api comes back as HTML.
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      throw new ApiError(response.status, `Expected JSON from ${this.baseUrl}${path}. Does MIMU_API_URL end in /api?`);
+    }
+    return (await response.json()) as T;
   }
 
   status(): Promise<WorkerStatus> {

@@ -1,0 +1,4 @@
+# Cloudflare Workers static assets: cross-origin isolation lets ONNX Runtime use multithreaded WASM for Whisper.
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp

@@ -1,0 +1,4 @@
+# Files Wrangler should not upload as static assets.
+# Vite emits ONNX Runtime's 26 MB WASM (over Cloudflare's 25 MiB per-file limit), but Transformers.js loads
+# a version-pinned copy from jsDelivr at runtime, so the bundled one is never requested.
+*.wasm

@@ -3,6 +3,13 @@
   "name": "mimu-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-15",
+  // One Worker serves both: the PWA as static assets, and the API under /api.
+  // Only /api/* runs Worker code; everything else is served straight from the built PWA.
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
   // Secrets (set with `wrangler secret put`, or apps/api/.dev.vars locally):
   // TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, MIMU_ACCESS_KEY
   "observability": { "enabled": true }
