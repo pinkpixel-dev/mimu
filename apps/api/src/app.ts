@@ -4,7 +4,8 @@ import type { Client } from "@libsql/client";
 import type { z } from "zod";
 import { CaptureInput, ClaimInput, CompleteInput, FailInput, NotePatch, NoteQuery } from "@mimu/shared";
 import { requireAccessKey } from "./auth.ts";
-import { createNote, deleteNote, getNote, listNotes, patchNote } from "./repo/notes.ts";
+import { markdownDownload, zipDownload } from "./export.ts";
+import { allNotes, createNote, deleteNote, getNote, listNotes, patchNote } from "./repo/notes.ts";
 import { listCategories, listTags } from "./repo/taxonomy.ts";
 import { claimNotes, completeNote, failNote, requestOrganize, workerStatus } from "./repo/worker.ts";
 
@@ -26,7 +27,15 @@ export function createApp(db: Client, accessKey: string) {
 
   // Auth is a bearer header, not a cookie, so allowing any origin doesn't open up CSRF.
   // Needed for the desktop worker's localhost-served PWA and the Vite dev server.
-  app.use("*", cors({ origin: "*", allowHeaders: ["Authorization", "Content-Type"], maxAge: 86_400 }));
+  app.use(
+    "*",
+    cors({
+      origin: "*",
+      allowHeaders: ["Authorization", "Content-Type"],
+      exposeHeaders: ["Content-Disposition"],
+      maxAge: 86_400,
+    }),
+  );
   app.get("/health", (c) => c.json({ ok: true }));
   app.use("*", requireAccessKey(accessKey));
 
@@ -58,6 +67,14 @@ export function createApp(db: Client, accessKey: string) {
   app.delete("/notes/:id", async (c) =>
     (await deleteNote(db, c.req.param("id"))) ? c.body(null, 204) : c.json({ error: "not_found" }, 404),
   );
+
+  app.get("/export/notes/:file", async (c) => {
+    const file = c.req.param("file");
+    const note = file.endsWith(".md") ? await getNote(db, file.slice(0, -3)) : null;
+    return note ? markdownDownload(note) : c.json({ error: "not_found" }, 404);
+  });
+
+  app.get("/export/all.zip", async () => zipDownload(await allNotes(db)));
 
   app.get("/categories", async (c) => c.json({ categories: await listCategories(db) }));
   app.get("/tags", async (c) => c.json({ tags: await listTags(db) }));

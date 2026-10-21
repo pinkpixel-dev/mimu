@@ -3,6 +3,7 @@ import type { Note, NotePatch } from "@mimu/shared";
 import type { ApiClient, Category } from "../../lib/api/client.ts";
 import { fallbackTitle, formatDate } from "../../lib/format.ts";
 import { EmptyState } from "./EmptyState.tsx";
+import { ExportButton } from "./ExportButton.tsx";
 import { Markdown } from "./Markdown.tsx";
 import { NoteEditor } from "./NoteEditor.tsx";
 
@@ -148,6 +149,7 @@ export function NoteDetail({ api, id, categories, onBack, onChanged, onDeleted }
             <button type="button" className="button button--ghost" onClick={() => setMode("confirm-delete")}>
               Delete
             </button>
+            <ExportButton label="Export" title="Download this note as Markdown" run={() => api.exportNote(note.id)} />
             <button type="button" className="button" onClick={() => setMode("edit")}>
               Edit
             </button>

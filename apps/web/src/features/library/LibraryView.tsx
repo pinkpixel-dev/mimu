@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ApiClient, Category, Tag } from "../../lib/api/client.ts";
 import type { Route } from "../../lib/router.ts";
 import { EmptyState } from "./EmptyState.tsx";
+import { ExportButton } from "./ExportButton.tsx";
 import { filterLabel, sameFilter, type LibraryFilter } from "./filters.ts";
 import { NoteDetail } from "./NoteDetail.tsx";
 import { NoteList } from "./NoteList.tsx";
@@ -63,15 +64,23 @@ export function LibraryView({ api, route, navigate, filter, onFilter, categories
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
-          <button
-            type="button"
-            className="button"
-            onClick={organizeNow}
-            disabled={organize === "sending"}
-            title="Ask the desktop worker to sort pending notes now"
-          >
-            {organize === "sent" ? "Asked Mimu" : organize === "error" ? "Try again" : "Organize now"}
-          </button>
+          <div className="library__actions">
+            <button
+              type="button"
+              className="button"
+              onClick={organizeNow}
+              disabled={organize === "sending"}
+              title="Ask the desktop worker to sort pending notes now"
+            >
+              {organize === "sent" ? "Asked Mimu" : organize === "error" ? "Try again" : "Organize now"}
+            </button>
+            <ExportButton
+              label="Export all"
+              title="Download every note as Markdown in a ZIP"
+              className="button button--ghost"
+              run={() => api.exportAll()}
+            />
+          </div>
         </header>
 
         <div className="chips" role="group" aria-label="Filters">

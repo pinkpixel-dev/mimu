@@ -92,6 +92,25 @@ export class ApiClient {
     await this.request("/organize", { method: "POST" });
   }
 
+  /** Downloads need the bearer header, so they're fetched as blobs instead of plain links. */
+  private async download(path: string, fallbackName: string): Promise<{ blob: Blob; filename: string }> {
+    const response = await fetch(`${this.base}${path}`, {
+      headers: { Authorization: `Bearer ${this.connection.accessKey}` },
+    });
+    if (!response.ok) throw new ApiError(response.status, response.statusText);
+    const disposition = response.headers.get("Content-Disposition") ?? "";
+    const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? fallbackName;
+    return { blob: await response.blob(), filename };
+  }
+
+  exportNote(id: string) {
+    return this.download(`/export/notes/${encodeURIComponent(id)}.md`, "note.md");
+  }
+
+  exportAll() {
+    return this.download("/export/all.zip", "mimu-export.zip");
+  }
+
   workerStatus(): Promise<WorkerStatus> {
     return this.request<WorkerStatus>("/worker/status");
   }

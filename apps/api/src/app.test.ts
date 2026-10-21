@@ -4,6 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createClient, type Client } from "@libsql/client";
+import { strFromU8, unzipSync } from "fflate";
 import type { ClaimedNote, Note } from "@mimu/shared";
 import { createApp } from "./app.ts";
 import { migrate } from "./db/migrations.ts";
@@ -186,6 +187,31 @@ describe("library queries", () => {
     const unsorted = await call<{ notes: Note[] }>("GET", "/notes?status=unsorted");
     assert.ok(unsorted.body.notes.length > 0);
     assert.ok(unsorted.body.notes.every((n) => n.status !== "processed"));
+  });
+
+  test("exports one note as Markdown and everything as a ZIP with a manifest", async () => {
+    const note = await capture("export me: a note about kumquat jam");
+    const md = await app.request(`/export/notes/${note.id}.md`, { headers: { Authorization: `Bearer ${KEY}` } });
+    assert.equal(md.status, 200);
+    assert.match(md.headers.get("content-disposition") ?? "", /attachment; filename=".+\.md"/);
+    const text = await md.text();
+    assert.match(text, new RegExp(`^---\\nid: "${note.id}"`));
+    assert.match(text, /export me: a note about kumquat jam\n$/);
+    assert.equal((await call("GET", `/export/notes/${note.id}`)).status, 404);
+    assert.equal((await call("GET", "/export/notes/missing.md")).status, 404);
+
+    const zip = await app.request("/export/all.zip", { headers: { Authorization: `Bearer ${KEY}` } });
+    assert.equal(zip.headers.get("content-type"), "application/zip");
+    const files = unzipSync(new Uint8Array(await zip.arrayBuffer()));
+    const manifest = JSON.parse(strFromU8(files["mimu-export/manifest.json"]!)) as { count: number; notes: { id: string; path: string }[] };
+    const total = (await call<{ notes: Note[] }>("GET", "/notes?limit=200")).body.notes.length;
+    assert.equal(manifest.count, total);
+    assert.equal(Object.keys(files).length, total + 1);
+    const entry = manifest.notes.find((n) => n.id === note.id)!;
+    assert.ok(entry.path.startsWith("Unsorted/"), "pending notes land in Unsorted/");
+    assert.ok(manifest.notes.some((n) => n.path.startsWith("Developer-Tools/")), "processed notes land in their category folder");
+    assert.ok(strFromU8(files[`mimu-export/${entry.path}`]!).includes("kumquat jam"));
+    assert.equal((await app.request("/export/all.zip")).status, 401);
   });
 
   test("deletes notes and their tags", async () => {

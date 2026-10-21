@@ -122,6 +122,14 @@ export async function listNotes(db: Client, query: NoteQuery): Promise<Note[]> {
   return result.rows.map(rowToNote);
 }
 
+/** Every note, for export. No limit: a personal library is small enough to read in one query. */
+export async function allNotes(db: Client): Promise<Note[]> {
+  const result = await db.execute(
+    `SELECT ${NOTE_COLUMNS} FROM notes n LEFT JOIN categories c ON c.id = n.category_id ORDER BY n.created_at`,
+  );
+  return result.rows.map(rowToNote);
+}
+
 /** Manual edit from the library. Marks the note user-edited so background processing never overwrites it. */
 export async function patchNote(db: Client, id: string, patch: NotePatch): Promise<Note | null> {
   const tx = await db.transaction("write");
