@@ -1,10 +1,25 @@
 import type { Ollama } from "ollama";
 import { ApiError, type MimuApi } from "./api.ts";
 import { OrganizeError, organizeNote } from "./organize/organize.ts";
+import { findWhen } from "./organize/when.ts";
 import { log } from "./log.ts";
 
 /** Bump when the prompt or output shape changes in a way worth reprocessing for later. */
 export const PROCESSING_VERSION = 1;
+
+/** This computer's timezone, used for notes captured before the app started sending one. */
+export const LOCAL_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+/** Use the note's timezone if it's one this runtime knows, otherwise the computer's own. */
+export function noteTimeZone(tz: string | null): string {
+  if (!tz) return LOCAL_TIME_ZONE;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return tz;
+  } catch {
+    return LOCAL_TIME_ZONE;
+  }
+}
 
 export interface PassResult {
   organized: number;
@@ -40,6 +55,12 @@ export class OrganizeRunner {
         for (const claim of claims) {
           try {
             const { result: organized, durationMs } = await organizeNote(this.ollama, this.model, claim.raw_text, categories);
+            const tz = noteTimeZone(claim.tz);
+            // A failed date pass shouldn't lose a good organize result.
+            const when = await findWhen(this.ollama, this.model, claim.raw_text, new Date(claim.created_at), tz).catch(() => ({
+              due_date: null,
+              due_time: null,
+            }));
             const note = await this.api.complete(claim.id, {
               claim_token: claim.claim_token,
               title: organized.title,
@@ -48,12 +69,16 @@ export class OrganizeRunner {
               category: organized.category.name,
               tags: organized.tags,
               uncertain: organized.uncertain,
+              due_date: when.due_date,
+              due_time: when.due_time,
+              tz,
               model_id: this.model,
               processing_version: PROCESSING_VERSION,
             });
             if (note.category && !categories.includes(note.category)) categories.push(note.category);
             result.organized++;
-            log.info(`  ✓ ${note.title} → ${note.category ?? "Unsorted"} (${(durationMs / 1000).toFixed(1)}s)`);
+            const due = when.due_date ? ` · due ${when.due_date}${when.due_time ? ` ${when.due_time}` : ""}` : "";
+            log.info(`  ✓ ${note.title} → ${note.category ?? "Unsorted"}${due} (${(durationMs / 1000).toFixed(1)}s)`);
           } catch (error) {
             if (error instanceof ApiError && error.status === 409) {
               log.warn(`  skipped ${claim.id}: edited or reclaimed while organizing`);

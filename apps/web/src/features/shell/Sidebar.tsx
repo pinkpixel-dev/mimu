@@ -13,7 +13,6 @@ interface Props {
   onCapture: () => void;
   onAsk: () => void;
   onDesktop: () => void;
-  /** Only set for hosted demo accounts. */
   onAccount?: () => void;
   onFilter: (filter: LibraryFilter) => void;
   onReconnect: () => void;

@@ -9,8 +9,14 @@ export const CaptureInput = z.object({
   id: z.string().min(10).max(40),
   raw_text: z.string().trim().min(1).max(20_000),
   created_at: z.iso.datetime({ offset: true }),
+  /** The device's IANA timezone, so "thursday at 2" can be resolved to the right day and hour. */
+  tz: z.string().min(1).max(64).optional(),
 });
 export type CaptureInput = z.infer<typeof CaptureInput>;
+
+/** A day as YYYY-MM-DD, and a time of day as 24-hour HH:MM. Both are in the note's own timezone. */
+export const DueDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+export const DueTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 /** Manual edits from the library. Any edit marks the note as user-edited so the worker never overwrites it. */
 export const NotePatch = z
@@ -35,6 +41,8 @@ export const NoteQuery = z.object({
   from: z.iso.datetime({ offset: true }).optional(),
   to: z.iso.datetime({ offset: true }).optional(),
   before: z.string().optional(),
+  /** Only notes due on this day (YYYY-MM-DD), earliest time first. */
+  due: DueDate.optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });
 export type NoteQuery = z.infer<typeof NoteQuery>;
@@ -49,6 +57,10 @@ export const Note = z.object({
   category_slug: z.string().nullable(),
   tags: z.array(z.string()),
   uncertain: z.array(z.string()),
+  /** When the note says something should happen, if it does. Times only exist alongside a date. */
+  due_date: DueDate.nullable(),
+  due_time: DueTime.nullable(),
+  tz: z.string().nullable(),
   status: NoteStatus,
   user_edited: z.boolean(),
   attempt_count: z.number().int(),

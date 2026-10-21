@@ -5,6 +5,7 @@ import { resolveCategory, setTags } from "./taxonomy.ts";
 const NOTE_COLUMNS = `
   n.id, n.raw_text, n.title, n.markdown, n.summary, n.status, n.user_edited, n.attempt_count,
   n.error_message, n.model_id, n.created_at, n.updated_at, n.processed_at, n.uncertain,
+  n.due_date, n.due_time, n.tz,
   c.name AS category, c.slug AS category_slug,
   (SELECT group_concat(tag, ',') FROM note_tags WHERE note_id = n.id) AS tags`;
 
@@ -30,6 +31,9 @@ function rowToNote(row: Row): Note {
     category_slug: str(row.category_slug),
     tags: row.tags ? String(row.tags).split(",").sort() : [],
     uncertain: jsonList(row.uncertain),
+    due_date: str(row.due_date),
+    due_time: str(row.due_time),
+    tz: str(row.tz),
     status: String(row.status) as NoteStatus,
     user_edited: Number(row.user_edited) === 1,
     attempt_count: Number(row.attempt_count),
@@ -45,9 +49,9 @@ function rowToNote(row: Row): Note {
 export async function createNote(db: Client, input: CaptureInput): Promise<{ note: Note; created: boolean }> {
   const now = new Date().toISOString();
   const result = await db.execute({
-    sql: `INSERT INTO notes (id, raw_text, status, created_at, updated_at) VALUES (?, ?, 'pending', ?, ?)
+    sql: `INSERT INTO notes (id, raw_text, tz, status, created_at, updated_at) VALUES (?, ?, ?, 'pending', ?, ?)
           ON CONFLICT (id) DO NOTHING`,
-    args: [input.id, input.raw_text, new Date(input.created_at).toISOString(), now],
+    args: [input.id, input.raw_text, input.tz ?? null, new Date(input.created_at).toISOString(), now],
   });
   const note = await getNote(db, input.id);
   if (!note) throw new Error(`Note ${input.id} missing after insert`);
@@ -112,6 +116,12 @@ export async function listNotes(db: Client, query: NoteQuery): Promise<Note[]> {
   if (query.before) {
     where.push("n.created_at < ?");
     args.push(query.before);
+  }
+  if (query.due) {
+    where.push("n.due_date = ?");
+    args.push(query.due);
+    // All-day items after the timed ones.
+    if (!fts) order = "n.due_time IS NULL, n.due_time, n.created_at";
   }
 
   const result = await db.execute({

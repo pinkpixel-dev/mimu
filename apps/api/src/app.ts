@@ -1,7 +1,7 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import type { Client } from "@libsql/client";
-import type { z } from "zod";
+import { z } from "zod";
 import {
   AskAnswerInput,
   AskFailInput,
@@ -9,6 +9,7 @@ import {
   CaptureInput,
   ClaimInput,
   CompleteInput,
+  DigestInput,
   FailInput,
   NotePatch,
   NoteQuery,
@@ -16,6 +17,9 @@ import {
 } from "@mimu/shared";
 import { answerAsk, claimAsk, createAsk, failAsk, getAsk, listAsks } from "./repo/asks.ts";
 import { requireAccessKey } from "./auth.ts";
+import { latestDigest, saveDigest } from "./repo/digests.ts";
+import { deleteSubscription, saveSubscription } from "./repo/push.ts";
+import { sendToAll, type PushConfig } from "./push/send.ts";
 import { markdownDownload, zipDownload } from "./export.ts";
 import { allNotes, createNote, deleteNote, getNote, listNotes, patchNote } from "./repo/notes.ts";
 import { listCategories, listTags } from "./repo/taxonomy.ts";
@@ -33,8 +37,21 @@ async function parseBody<T extends z.ZodType>(c: Context, schema: T): Promise<z.
   return parsed.data;
 }
 
+export interface AppOptions {
+  /** Push notifications, when VAPID keys are configured. */
+  push?: PushConfig;
+  /** Called after a device turns on notifications (the hosted demo uses it to flag the account for reminders). */
+  onPushSubscribed?: () => Promise<void>;
+}
+
+const PushSubscriptionInput = z.object({
+  endpoint: z.url().max(2000),
+  keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
+});
+
 /** The API, independent of the Worker runtime so tests can run it against a local libSQL file. */
-export function createApp(db: Client, accessKey: string) {
+export function createApp(db: Client, accessKey: string, options: AppOptions = {}) {
+  const { push } = options;
   const app = new Hono();
 
   // Auth is a bearer header, not a cookie, so allowing any origin doesn't open up CSRF.
@@ -108,6 +125,40 @@ export function createApp(db: Client, accessKey: string) {
   app.get("/asks/:id", async (c) => {
     const ask = await getAsk(db, c.req.param("id"));
     return ask ? c.json(ask) : c.json({ error: "not_found" }, 404);
+  });
+
+  app.get("/digests/latest", async (c) => c.json({ digest: await latestDigest(db) }));
+
+  app.post("/worker/digests", async (c) => {
+    const input = await parseBody(c, DigestInput);
+    if (input instanceof Response) return input;
+    const digest = await saveDigest(db, input);
+    if (push) await sendToAll(db, push, { title: "Good morning from Mimu", body: digest.summary, url: "#/library", tag: "digest" });
+    return c.json(digest, 201);
+  });
+
+  app.get("/push/config", (c) => c.json({ public_key: push?.publicKey ?? null }));
+
+  app.post("/push/subscriptions", async (c) => {
+    if (!push) return c.json({ error: "push_disabled" }, 404);
+    const input = await parseBody(c, PushSubscriptionInput);
+    if (input instanceof Response) return input;
+    await saveSubscription(db, input);
+    await options.onPushSubscribed?.();
+    return c.body(null, 204);
+  });
+
+  app.delete("/push/subscriptions", async (c) => {
+    const input = await parseBody(c, PushSubscriptionInput.pick({ endpoint: true }));
+    if (input instanceof Response) return input;
+    await deleteSubscription(db, input.endpoint);
+    return c.body(null, 204);
+  });
+
+  app.post("/push/test", async (c) => {
+    if (!push) return c.json({ error: "push_disabled" }, 404);
+    const delivered = await sendToAll(db, push, { title: "Mimu", body: "Notifications are on. I'll remind you.", tag: "test" });
+    return c.json({ delivered });
   });
 
   app.post("/worker/asks/claim", async (c) => c.json({ ask: await claimAsk(db) }));

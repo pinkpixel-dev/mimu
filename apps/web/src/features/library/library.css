@@ -117,6 +117,16 @@
   border: 1px solid var(--border);
 }
 
+.due {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--accent-strong);
+  color: var(--text);
+}
+
 .pill[data-status="failed"] {
   color: var(--danger);
   border-color: var(--danger);

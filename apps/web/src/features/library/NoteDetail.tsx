@@ -5,6 +5,7 @@ import { fallbackTitle, formatDate } from "../../lib/format.ts";
 import { EmptyState } from "./EmptyState.tsx";
 import { ExportButton } from "./ExportButton.tsx";
 import { Markdown } from "./Markdown.tsx";
+import { DueBadge } from "./NoteList.tsx";
 import { NoteEditor } from "./NoteEditor.tsx";
 
 interface Props {
@@ -84,6 +85,7 @@ export function NoteDetail({ api, id, categories, onBack, onChanged, onDeleted }
         <p className="detail__meta">
           <span>{formatDate(note.created_at)}</span>
           {note.category && <span className="note-row__category">{note.category}</span>}
+          {note.due_date && <DueBadge date={note.due_date} time={note.due_time} />}
           {note.user_edited && <span className="detail__edited">Edited</span>}
         </p>
         {note.tags.length > 0 && (

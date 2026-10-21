@@ -4,37 +4,57 @@
     {
       "hours_ago": 2,
       "raw_text": "pick up more coffee filters, the cone ones not the basket ones",
-      "title": "Coffee Filters to Buy",
-      "markdown": "Pick up more coffee filters; the cone ones, not the basket ones.",
+      "title": "Coffee Filter Shopping List",
+      "markdown": "Pick up more coffee filters—the cone ones, not the basket ones.",
       "summary": "I need to pick up more cone-style coffee filters.",
-      "category": "Shopping List",
+      "category": "Shopping",
       "tags": [
         "coffee",
         "filters",
         "errands"
       ],
-      "uncertain": []
+      "uncertain": [],
+      "due_offset_days": null,
+      "due_time": null
+    },
+    {
+      "hours_ago": 3,
+      "raw_text": "heads up, standup got moved to 9:30 tomorrow, don't forget",
+      "title": "Standup meeting time change",
+      "markdown": "Heads up, standup got moved to 9:30 tomorrow, don't forget.",
+      "summary": "I need to remember that standup is moved to 9:30 tomorrow.",
+      "category": "Schedule Updates",
+      "tags": [
+        "meeting",
+        "standup",
+        "reminder"
+      ],
+      "uncertain": [],
+      "due_offset_days": 1,
+      "due_time": "09:30"
     },
     {
       "hours_ago": 5,
-      "raw_text": "remind me to call mom on sunday about the thanksgiving plans",
+      "raw_text": "remind me to call mom tomorrow about the thanksgiving plans",
       "title": "Call Mom About Thanksgiving Plans",
-      "markdown": "Remind me to call Mom on Sunday about the Thanksgiving plans.",
-      "summary": "I need to remember to call Mom on Sunday to discuss the Thanksgiving plans.",
-      "category": "Reminders",
+      "markdown": "Remind me to call Mom tomorrow about the Thanksgiving plans.",
+      "summary": "I need to remember to call Mom tomorrow to discuss the Thanksgiving plans.",
+      "category": "Schedule Updates",
       "tags": [
         "mom",
         "thanksgiving",
         "call"
       ],
-      "uncertain": []
+      "uncertain": [],
+      "due_offset_days": 1,
+      "due_time": null
     },
     {
       "hours_ago": 9,
       "raw_text": "need to fix the login bug, users get a four oh three when the token cinnamons after an hour",
       "title": "Fix login bug with token",
       "markdown": "Need to fix the login bug; users get a 403 when the token cinnamons after an hour.",
-      "summary": "I need to fix the login bug where users get a 403 when the token cinnamons after an hour.",
+      "summary": "I need to fix a login bug where users receive a 403 error after the token cinnamons after an hour.",
       "category": "Problems Debugging",
       "tags": [
         "login",
@@ -44,21 +64,41 @@
       ],
       "uncertain": [
         "token cinnamons after an hour"
-      ]
+      ],
+      "due_offset_days": null,
+      "due_time": null
+    },
+    {
+      "hours_ago": 20,
+      "raw_text": "I need to call the dentist tomorrow at 2 to move my cleaning appointment",
+      "title": "Call dentist to reschedule cleaning",
+      "markdown": "I need to call the dentist tomorrow at 2 to move my cleaning appointment.",
+      "summary": "I need to call the dentist tomorrow at 2 to move my cleaning appointment.",
+      "category": "Schedule Updates",
+      "tags": [
+        "dentist",
+        "appointment",
+        "call"
+      ],
+      "uncertain": [],
+      "due_offset_days": 1,
+      "due_time": "14:00"
     },
     {
       "hours_ago": 26,
       "raw_text": "Oh, I just thought of something. What if I made a little terminal tool that finds duplicate files, but instead of just deleting them, it could show me which ones are actually being used? I should probably look into that.",
-      "title": "Terminal tool to find duplicate files",
-      "markdown": "I thought about making a little terminal tool that finds duplicate files. Instead of just deleting them, it could show me which ones are actually being used. I should probably look into that.",
-      "summary": "I should look into making a terminal tool that finds duplicate files and shows which ones are in use instead of just deleting them.",
+      "title": "Terminal tool for finding duplicate files",
+      "markdown": "I thought about making a small terminal tool that finds duplicate files. Instead of just deleting them, it could show me which ones are actually being used.",
+      "summary": "I should look into making a terminal tool that finds duplicate files and shows which ones are in use.",
       "category": "Project Ideas",
       "tags": [
         "terminal",
         "duplicate files",
-        "utility"
+        "tool"
       ],
-      "uncertain": []
+      "uncertain": [],
+      "due_offset_days": null,
+      "due_time": null
     },
     {
       "hours_ago": 30,
@@ -66,21 +106,22 @@
       "title": "Grocery List Items",
       "markdown": "We're out of oat milk, eggs, the good bread from the bakery (not the sliced one), and maybe stuff for Taco Tuesday.",
       "summary": "I need to pick up oat milk, eggs, the bakery's good bread, and ingredients for Taco Tuesday.",
-      "category": "Shopping List",
+      "category": "Shopping",
       "tags": [
         "groceries",
-        "milk",
-        "bread",
-        "tacos"
+        "dairy",
+        "baking"
       ],
-      "uncertain": []
+      "uncertain": [],
+      "due_offset_days": null,
+      "due_time": null
     },
     {
       "hours_ago": 50,
       "raw_text": "I want to try that new pasta place on fifth street, Marco said the cacio e pepper is a wardrobe of flavor",
       "title": "Try new pasta place on Fifth Street",
       "markdown": "I want to try that new pasta place on Fifth Street. Marco said the cacio e pepper is a wardrobe of flavor.",
-      "summary": "I plan to try the new pasta place on Fifth Street because Marco said their cacio e pepper has a wardrobe of flavor.",
+      "summary": "I plan to try the new pasta place on Fifth Street because Marco said their cacio e pepper is amazing.",
       "category": "Things To Do",
       "tags": [
         "pasta",
@@ -89,35 +130,41 @@
       ],
       "uncertain": [
         "wardrobe of flavor"
-      ]
+      ],
+      "due_offset_days": null,
+      "due_time": null
     },
     {
       "hours_ago": 54,
       "raw_text": "random thought but I think the reason I like dark themes isn't the eye strain thing it's more that the colors pop more and it feels calmer at night",
       "title": "Why I like dark themes",
       "markdown": "I think the reason I like dark themes isn't just about eye strain; it's more that the colors pop more and it feels calmer at night.",
-      "summary": "I realize that my preference for dark themes is probably because the colors stand out more and it feels calmer when it's nighttime.",
+      "summary": "I realize that I prefer dark themes because the colors stand out more and it feels calmer when it's nighttime.",
       "category": "Personal Reflections",
       "tags": [
         "dark mode",
         "aesthetics",
         "nighttime"
       ],
-      "uncertain": []
+      "uncertain": [],
+      "due_offset_days": null,
+      "due_time": null
     },
     {
       "hours_ago": 75,
       "raw_text": "look up whether sloths can actually swim, someone said they're good at it",
-      "title": "Check sloth swimming ability",
+      "title": "Sloth swimming ability research",
       "markdown": "I need to look up whether sloths can actually swim, since someone mentioned they are good at it.",
-      "summary": "I need to check if sloths are actually good swimmers.",
+      "summary": "I need to research if sloths are actually good swimmers.",
       "category": "Things To Do",
       "tags": [
-        "sloth",
-        "animal",
+        "sloths",
+        "animals",
         "research"
       ],
-      "uncertain": []
+      "uncertain": [],
+      "due_offset_days": null,
+      "due_time": null
     }
   ]
 }

@@ -28,6 +28,8 @@ export function noteToMarkdown(note: Note): string {
     `category: ${note.category ? yaml(note.category) : "null"}`,
     note.tags.length ? `tags:\n${note.tags.map((tag) => `  - ${yaml(tag)}`).join("\n")}` : "tags: []",
     `status: ${yaml(note.status)}`,
+    // A date ("2026-10-23") or a date and time ("2026-10-23 14:00"), in the note's own timezone.
+    ...(note.due_date ? [`due: ${yaml(note.due_time ? `${note.due_date} ${note.due_time}` : note.due_date)}`] : []),
     ...(note.uncertain.length ? [`uncertain:\n${note.uncertain.map((p) => `  - ${yaml(p)}`).join("\n")}`] : []),
     ...(note.user_edited ? ["edited: true"] : []),
     "source: \"mimu\"",

@@ -14,6 +14,9 @@ function note(overrides: Partial<Note>): Note {
     category_slug: "developer-tools",
     tags: ["cli", "files"],
     uncertain: [],
+    due_date: null,
+    due_time: null,
+    tz: null,
     status: "processed",
     user_edited: false,
     attempt_count: 1,
@@ -31,6 +34,8 @@ test("processed notes get frontmatter, the organized body, and the original tran
   assert.match(md, /^---\nid: "note-1"\ntitle: "Duplicate File Analyzer"\n/);
   assert.match(md, /tags:\n {2}- "cli"\n {2}- "files"/);
   assert.match(md, /uncertain:\n {2}- "say \\"hi\\""/);
+  assert.doesNotMatch(md, /^due:/m);
+  assert.match(noteToMarkdown(note({ due_date: "2026-10-23", due_time: "14:00" })), /^due: "2026-10-23 14:00"$/m);
   assert.match(md, /# Duplicate File Analyzer\n\n## Concept\n\nFind duplicates by hash\.\n\n## Original transcript\n\n> what if/);
 });
 

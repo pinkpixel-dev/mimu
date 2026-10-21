@@ -21,6 +21,13 @@ The first version of Mimu, built for the Hacktoberfest 2026 Week 3 challenge.
 - After **Organize now**, the library checks every few seconds for a minute, so notes switch to organized right after Gemma finishes.
 - Until a desktop worker has connected, the capture screen shows a short "Set it up" link to the Desktop page.
 
+### ⏰ Due dates, digest, and reminders
+
+- Gemma works out when a note says something is happening ("call the dentist thursday at 2", "the first", "in two weeks"), using the capture time and the phone's timezone. Notes show a badge like "Fri, Oct 23, 10:00 AM", and exports include `due:`.
+- Every morning at 8 (desktop time, `MIMU_DIGEST_HOUR`), the worker has Gemma write a short digest of what's due today and what you saved yesterday, and shows it as a desktop notification.
+- A **Today** card at the top of the library shows the digest and everything due today.
+- Turn on notifications from the Account page to get the morning digest on your phone, plus a reminder 30 minutes before anything with a time. Reminders come from a Cloudflare cron, so they arrive even when your computer is off. On iPhone this needs Mimu added to the Home Screen.
+
 ### 📚 Library and Ask
 
 - Full-text search with prefix matching and stemming, plus filters by category, tag, and Unsorted.
@@ -34,6 +41,8 @@ The first version of Mimu, built for the Hacktoberfest 2026 Week 3 challenge.
 - The desktop worker is on npm as `@pinkpixel/mimu-worker`. `mimu-worker setup` saves your connection, pulls the model, and starts the worker at login (systemd on Linux, launchd on macOS).
 - The **Desktop** page shows the setup command with your URL and key filled in, plus whether your worker is connected.
 - `apps/api/.dev.vars.example` lists every setting.
+- `pnpm --filter @mimu/api vapid` generates the keys for push notifications.
+- `pnpm migrate` also migrates the accounts database and every demo account's database on a hosted demo.
 
 ### 🌐 Hosted demo
 
@@ -42,6 +51,7 @@ The first version of Mimu, built for the Hacktoberfest 2026 Week 3 challenge.
 - The **Account** page has a QR code that signs your phone in to the same account, plus sign out and delete.
 - Demo accounts are deleted after 30 days without use, and sign-ups stop at 50 accounts.
 - `pnpm --filter @mimu/api hosted-setup` sets up a hosted demo of your own.
+- New demo accounts start with sample notes due today and tomorrow, in the visitor's own timezone.
 
 ### 🐛 Fixes
 

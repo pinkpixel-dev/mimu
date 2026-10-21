@@ -18,7 +18,8 @@ There's a hosted demo at **[mimu.pinkpixel.dev](https://mimu.pinkpixel.dev)**, s
 2. Install [Ollama](https://ollama.com/download) on a computer with a decent GPU.
 3. Open **Desktop** in the sidebar, copy the command, and run it in a terminal on that computer. It installs the Mimu worker and downloads Gemma (a few GB, one time).
 4. Open **Account** and tap **Show QR code**, then scan it with your phone's camera. Your phone is now signed in to the same Mimu.
-5. Talk into your phone and watch the note get organized.
+5. Talk into your phone and watch the note get organized. Try one with a time in it, like "call the dentist tomorrow at 2".
+6. Back on **Account**, tap **Turn on notifications** to get the morning digest and reminders. On iPhone, add Mimu to the Home Screen first and turn them on from there.
 
 Demo accounts are deleted after 30 days without use, and you can delete yours any time from the Account page. In the demo, your note text is stored in a database on my Turso account. The audio still never leaves your phone, and Gemma still runs on your own computer. If you'd rather keep your notes completely to yourself, set up your own copy (below).
 
@@ -39,8 +40,9 @@ Demo accounts are deleted after 30 days without use, and you can delete yours an
 2. **Save.** The note goes into a queue on your device first, then uploads. If you're offline, it waits and syncs when you're back.
 3. **Organize.** The Mimu worker on your desktop picks up new notes when it starts, every hour, and whenever you tap **Organize now**. Gemma 4 (`gemma4:e4b` by default) writes a title, a cleaned-up Markdown body, a summary, a category, and tags. Your original transcript is always kept.
 4. **Browse.** Search across everything, filter by category, tag, or Unsorted, and edit anything by hand. Your edits are never overwritten by the worker.
-5. **Ask.** Ask things like "who do I need to call?" or "what did I save yesterday?". The desktop worker searches your notes and answers from them only, with links to the notes it used.
-6. **Export.** Download one note as `.md`, or the whole library as a ZIP of Markdown files grouped into category folders.
+5. **Remember.** If a note says when something's happening ("thursday at 2", "the first"), Gemma works out the date and time using when you said it and your phone's timezone. Every morning at 8, the worker writes a short digest of what's due today and what you saved yesterday. With notifications on, the digest lands on your phone, plus a reminder 30 minutes before anything with a time.
+6. **Ask.** Ask things like "who do I need to call?" or "what did I save yesterday?". The desktop worker searches your notes and answers from them only, with links to the notes it used.
+7. **Export.** Download one note as `.md`, or the whole library as a ZIP of Markdown files grouped into category folders.
 
 ## Features
 
@@ -50,6 +52,9 @@ Demo accounts are deleted after 30 days without use, and you can delete yours an
 - Categories stay tidy: "Developer Tool" gets filed into an existing "Developer Tools" instead of creating a near-duplicate
 - **"Mimu wasn't sure about"**: phrases that look misheard (like "the token cinnamons after an hour") get flagged next to the note instead of being quietly guessed at
 - Full-text search with prefix matching and stemming
+- **Due dates from what you said**: "call the dentist thursday at 2" becomes a note due Thursday at 2:00 PM, worked out by Gemma from when you said it and your timezone
+- **Morning digest**: at 8 every morning, Gemma writes a few sentences about today and yesterday. It shows up in a **Today** card at the top of the library and as a desktop notification.
+- **Phone notifications**: the digest, plus a reminder 30 minutes before anything with a time, sent even when your computer is off
 - **Ask Mimu**: plain-language questions about your notes, answered by your local model from your notes only. If nothing matches, it says so instead of making something up.
 - Manual editing, delete with confirmation, and the original transcript one tap away
 - Markdown export with YAML frontmatter, stable note IDs, and a `manifest.json`, which also works in Obsidian
@@ -186,7 +191,8 @@ The `.env` file also has optional settings for the Ollama host, the model, how o
 5. Open a note to read it, check the original transcript, **Edit** it, or **Export** it. **Export all** in the library downloads everything.
 6. Open **Ask** and ask about anything you've saved. Answers usually take a few seconds and link to the notes they came from. Your desktop worker needs to be running for this.
 7. Open **Desktop** any time to check whether your desktop worker is connected, or to copy the setup command again.
-8. On the hosted demo, **Account** has the QR code for your phone, GitHub linking, sign out, and delete. It shows up in the sidebar, and as a button at the top of the capture screen on phones.
+8. **Account** (in the sidebar, or the button at the top of the capture screen on phones) turns notifications on or off for each device and can send a test. On the hosted demo, it also has the QR code for your phone, GitHub linking, sign out, and delete.
+9. The **Today** card at the top of the library shows this morning's digest and anything due today.
 
 The first time you open the capture screen, it downloads the Whisper model (about 41 MB). After that, it's cached.
 
@@ -196,7 +202,23 @@ The first time you open the capture screen, it downloads the Whisper model (abou
 - **Your notes live in your own Turso database**, behind your own Worker and access key.
 - **The organizing runs on your own machine** through Ollama. Note text never goes to an AI provider.
 - The browser downloads the Whisper model files from Hugging Face and the ONNX Runtime files from jsDelivr. Neither one sees your audio or notes.
+- **Phone notifications** travel through your browser's push service (Apple's, Google's, or Mozilla's). The contents are end-to-end encrypted with your device's key, so the push service can't read them.
 - **On the hosted demo**, the first two points still hold, but your note text lives in a database on the demo's Turso account instead of yours. Each demo account gets its own database, and it's deleted after 30 days without use or when you delete your account.
+
+## Notifications on your own Mimu
+
+The morning digest shows up in the app and as a desktop notification with no setup. For phone notifications, the Worker needs a pair of VAPID keys (that's how push services know notifications really come from your Mimu):
+
+```bash
+pnpm --filter @mimu/api vapid
+pnpm quickstart
+```
+
+The first command generates the keys into `apps/api/.dev.vars` and asks for a contact email (push services only use it if something goes wrong). The second redeploys with them. Then open **Account** on your phone and tap **Turn on notifications**. Keep the same keys from then on, since new keys would mean turning notifications on again on every device.
+
+The digest time is the desktop's clock. Set `MIMU_DIGEST_HOUR` (0 to 23) for the worker if 8 doesn't suit you.
+
+After pulling an update, run `pnpm migrate` before deploying. On a hosted demo, it also brings the accounts database and every demo account's database up to date.
 
 ## Running a hosted demo
 
@@ -238,7 +260,7 @@ mimu-export/
 └── manifest.json
 ```
 
-Each file has YAML frontmatter (`id`, `title`, `created`, `updated`, `category`, `tags`, `status`, plus `uncertain` and `edited` when they apply), then the organized note, then the original transcript as a quote. Notes Mimu hasn't organized yet go in `Unsorted/` as the raw capture. Exports are built straight from your saved notes, so they don't need the desktop or the model.
+Each file has YAML frontmatter (`id`, `title`, `created`, `updated`, `category`, `tags`, `status`, plus `due`, `uncertain`, and `edited` when they apply), then the organized note, then the original transcript as a quote. Notes Mimu hasn't organized yet go in `Unsorted/` as the raw capture. Exports are built straight from your saved notes, so they don't need the desktop or the model.
 
 ## Troubleshooting
 
@@ -321,7 +343,9 @@ assets/     Mascot and app icon
 
 - Your own copy is single-user, protected by one access key. Accounts only exist on a hosted demo.
 - English only for now (`whisper-tiny.en`).
-- Notes only get organized, and questions only get answered, while your desktop worker is running.
+- Notes only get organized, questions only get answered, and the morning digest only gets written while your desktop worker is running. Reminders for notes that already have a time don't need it.
+- Push notifications on iPhone only work after adding Mimu to the Home Screen. The Home Screen app keeps its own sign-in, separate from Safari, so you sign in once more there (GitHub or your key).
+- Due dates come from a small model reading casual speech. In testing it got every phrase right, but mumbled or ambiguous dates can still come out wrong, so check the badge on anything important.
 - Ask Mimu finds notes by keyword (with some help from Gemma picking search words), not by meaning, so a question worded very differently from the note can miss it.
 - The app itself needs a connection to load. Captures still queue offline once it's open.
 

@@ -21,7 +21,7 @@ const SAVED_DISPLAY_MS = 2200;
 interface Props {
   outbox: Outbox;
   onReconnect: () => void;
-  /** Shown on phones for demo accounts, where the sidebar (and its Account link) is hidden. */
+  /** Shown on phones, where the sidebar (and its Account link) is hidden. */
   onAccount?: () => void;
   /** Set while no desktop worker has ever connected, since notes wait for one to get organized. */
   onSetUpDesktop?: () => void;

@@ -2,6 +2,7 @@ import { Ollama } from "ollama";
 import { MimuApi } from "./api.ts";
 import { Asker } from "./ask/asker.ts";
 import type { WorkerConfig } from "./config.ts";
+import { Digester } from "./digest/digester.ts";
 import { log } from "./log.ts";
 import { OrganizeRunner } from "./runner.ts";
 
@@ -11,6 +12,7 @@ export async function startWorker(config: WorkerConfig): Promise<void> {
   const ollama = new Ollama({ host: config.ollamaHost });
   const runner = new OrganizeRunner(api, ollama, config.model, config.batchSize);
   const asker = new Asker(api, ollama, config.model);
+  const digester = new Digester(api, ollama, config.model, config.digestHour);
 
   log.info(`Mimu worker · ${config.model} · ${config.apiUrl} · every ${config.intervalMs / 60_000} min`);
 
@@ -33,6 +35,10 @@ export async function startWorker(config: WorkerConfig): Promise<void> {
   setInterval(() => void asker.tick(), config.askPollMs);
 
   await runner.pass("startup");
+
+  // After the startup pass, so yesterday's late captures are organized before they get summarized.
+  await digester.tick();
+  setInterval(() => void digester.tick(), 60_000);
 
   setInterval(() => void runner.pass("scheduled"), config.intervalMs);
 

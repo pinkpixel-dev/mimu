@@ -277,3 +277,68 @@ describe("library queries", () => {
     assert.equal((await call("DELETE", `/notes/${note.id}`)).status, 404);
   });
 });
+
+describe("due dates", () => {
+  test("the capture's timezone reaches the worker, and the due date comes back on the note", async () => {
+    const id = "01DUEDATE000000001";
+    await call("POST", "/notes", {
+      id,
+      raw_text: "call the dentist thursday at 2",
+      created_at: "2026-10-21T15:12:00-04:00",
+      tz: "America/New_York",
+    });
+    const claim = (await claimAll()).find((c) => c.id === id);
+    assert.ok(claim);
+    assert.equal(claim.tz, "America/New_York");
+    assert.equal(claim.created_at, "2026-10-21T19:12:00.000Z");
+
+    const done = await call<Note>("POST", `/worker/complete/${id}`, {
+      ...organized(claim, "Appointments"),
+      due_date: "2026-10-22",
+      due_time: "14:00",
+      tz: "Europe/Paris",
+    });
+    assert.equal(done.body.due_date, "2026-10-22");
+    assert.equal(done.body.due_time, "14:00");
+    assert.equal(done.body.tz, "America/New_York", "the worker's fallback never replaces the capture's own timezone");
+  });
+
+  test("a time without a date isn't stored, and malformed values are rejected", async () => {
+    const id = "01DUEDATE000000002";
+    await call("POST", "/notes", { id, raw_text: "random thought", created_at: new Date().toISOString() });
+    const claim = (await claimAll()).find((c) => c.id === id);
+    assert.ok(claim);
+    assert.equal(claim.tz, null);
+
+    const bad = await call("POST", `/worker/complete/${id}`, { ...organized(claim, "Thoughts"), due_date: "thursday" });
+    assert.equal(bad.status, 400);
+    const done = await call<Note>("POST", `/worker/complete/${id}`, { ...organized(claim, "Thoughts"), due_time: "09:00" });
+    assert.equal(done.body.due_date, null);
+    assert.equal(done.body.due_time, null);
+  });
+});
+
+describe("morning digest", () => {
+  test("lists notes due on a day, timed ones first", async () => {
+    const due = await call<{ notes: Note[] }>("GET", "/notes?due=2026-10-22");
+    assert.deepEqual(
+      due.body.notes.map((n) => [n.id, n.due_time]),
+      [["01DUEDATE000000001", "14:00"]],
+    );
+    assert.equal((await call("GET", "/notes?due=thursday")).status, 400);
+  });
+
+  test("one digest per day, and the latest one is what the app reads", async () => {
+    assert.deepEqual((await call<{ digest: null }>("GET", "/digests/latest")).body, { digest: null });
+    const day = { tz: "America/New_York", summary: "Dentist at 2 today.", note_ids: ["01DUEDATE000000001"] };
+    assert.equal((await call("POST", "/worker/digests", { ...day, date: "2026-10-22" })).status, 201);
+    await call("POST", "/worker/digests", { ...day, date: "2026-10-22", summary: "Rewritten after a crash." });
+    await call("POST", "/worker/digests", { ...day, date: "2026-10-21", summary: "Older day." });
+
+    const latest = await call<{ digest: { date: string; summary: string; note_ids: string[] } }>("GET", "/digests/latest");
+    assert.equal(latest.body.digest.date, "2026-10-22");
+    assert.equal(latest.body.digest.summary, "Rewritten after a crash.");
+    assert.deepEqual(latest.body.digest.note_ids, ["01DUEDATE000000001"]);
+    assert.equal((await call("POST", "/worker/digests", { ...day, date: "tomorrow" })).status, 400);
+  });
+});

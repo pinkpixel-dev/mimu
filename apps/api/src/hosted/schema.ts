@@ -40,4 +40,10 @@ export const ACCOUNT_MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  {
+    version: 2,
+    name: "push",
+    // Set when any device on the account turns on notifications, so the reminder cron only opens those databases.
+    statements: [`ALTER TABLE accounts ADD COLUMN push_enabled INTEGER NOT NULL DEFAULT 0`],
+  },
 ];

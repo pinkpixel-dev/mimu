@@ -26,7 +26,12 @@ if (!accessKey) throw new Error("Set MIMU_ACCESS_KEY in apps/api/.dev.vars or th
 const db = createClient({ url: `file:${file}` });
 await migrate(db);
 
-let fetch = createApp(db, accessKey).fetch;
+const push =
+  vars.VAPID_PUBLIC_KEY && vars.VAPID_PRIVATE_KEY && vars.VAPID_CONTACT
+    ? { publicKey: vars.VAPID_PUBLIC_KEY, privateKey: vars.VAPID_PRIVATE_KEY, contact: vars.VAPID_CONTACT }
+    : undefined;
+
+let fetch = createApp(db, accessKey, { push }).fetch;
 if (process.env.MIMU_LOCAL_HOSTED) {
   const dir = fileURLToPath(new URL("../local-demo/", import.meta.url));
   await mkdir(dir, { recursive: true });
@@ -42,6 +47,7 @@ if (process.env.MIMU_LOCAL_HOSTED) {
     github: githubId && githubSecret ? { clientId: githubId, clientSecret: githubSecret } : undefined,
     maxAccounts: Number(process.env.MIMU_DEMO_MAX_ACCOUNTS ?? vars.MIMU_DEMO_MAX_ACCOUNTS) || 50,
     appUrl: process.env.MIMU_APP_URL ?? "http://localhost:5173",
+    push,
   }).fetch;
 }
 

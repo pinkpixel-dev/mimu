@@ -70,6 +70,17 @@ describe("hosted demo", () => {
     assert.ok(notes.every((note) => note.status === "processed" && note.title && note.category));
     assert.ok(notes.some((note) => note.uncertain.length > 0), "at least one sample shows a misheard phrase");
 
+    // "Tomorrow" in the seed becomes a real date, one day after each note's own capture day.
+    const dated = seed.notes.filter((note) => note.due_offset_days !== null).length;
+    assert.ok(dated > 0);
+    const due = notes.filter((note) => note.due_date);
+    assert.equal(due.length, dated);
+    for (const note of due) {
+      const captureDay = new Date(note.created_at).toISOString().slice(0, 10);
+      assert.ok(note.due_date! > captureDay, `${note.title} is due after it was captured`);
+      assert.equal(note.tz, "UTC");
+    }
+
     // Search runs through the seeded FTS index.
     const found = (await call<{ notes: Note[] }>("GET", "/notes?q=coffee", key)).body.notes;
     assert.equal(found.length, 1);

@@ -1,4 +1,4 @@
-import type { Ask, CaptureInput, Note, NotePatch, WorkerStatus } from "@mimu/shared";
+import type { Ask, CaptureInput, Digest, Note, NotePatch, WorkerStatus } from "@mimu/shared";
 import { normalizeApiUrl, type Connection } from "../connection.ts";
 import type { DemoAccount } from "./hosted.ts";
 
@@ -69,6 +69,14 @@ export class ApiClient {
     return (await this.request<{ notes: Note[] }>(`/notes?${params}`, { signal })).notes;
   }
 
+  async notesDueOn(date: string): Promise<Note[]> {
+    return (await this.request<{ notes: Note[] }>(`/notes?due=${encodeURIComponent(date)}&limit=50`)).notes;
+  }
+
+  async latestDigest(): Promise<Digest | null> {
+    return (await this.request<{ digest: Digest | null }>("/digests/latest")).digest;
+  }
+
   getNote(id: string): Promise<Note> {
     return this.request<Note>(`/notes/${encodeURIComponent(id)}`);
   }
@@ -136,6 +144,23 @@ export class ApiClient {
 
   async githubLinkUrl(): Promise<string> {
     return (await this.request<{ url: string }>("/auth/github/link", { method: "POST" })).url;
+  }
+
+  /** The server's VAPID public key, or null when push isn't set up on this Mimu. */
+  async pushPublicKey(): Promise<string | null> {
+    return (await this.request<{ public_key: string | null }>("/push/config")).public_key;
+  }
+
+  async savePushSubscription(subscription: PushSubscriptionJSON): Promise<void> {
+    await this.request("/push/subscriptions", { method: "POST", body: JSON.stringify(subscription) });
+  }
+
+  async deletePushSubscription(endpoint: string): Promise<void> {
+    await this.request("/push/subscriptions", { method: "DELETE", body: JSON.stringify({ endpoint }) });
+  }
+
+  async sendTestPush(): Promise<number> {
+    return (await this.request<{ delivered: number }>("/push/test", { method: "POST" })).delivered;
   }
 
   /** One-time code that signs another device in to this demo account. */

@@ -22,6 +22,9 @@ importers:
       hono:
         specifier: ^4.13.13
         version: 4.13.13
+      web-push-browser:
+        specifier: 1.4.2
+        version: 1.4.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1249,6 +1252,9 @@ packages:
       yaml:
         optional: true
 
+  web-push-browser@1.4.2:
+    resolution: {integrity: sha512-U4gs2JdGtjJ9QAezpLLbqTBfjXWttoy0N0c+RU8wCadG074/C7TVocX92B3aYfhda1ZJzU36UOMZZIkJsuBOQg==}
+
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
@@ -2144,6 +2150,8 @@ snapshots:
       esbuild: 0.28.2
       fsevents: 2.3.3
       tsx: 4.23.15
+
+  web-push-browser@1.4.2: {}
 
   whatwg-fetch@3.6.20: {}
 

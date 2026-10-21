@@ -22,3 +22,10 @@ MIMU_DEMO_MAX_ACCOUNTS=50
 # https://<your-domain>/api/auth/github/callback
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+
+# Push notifications (optional): the morning digest and reminders on your phone.
+# Run `pnpm --filter @mimu/api vapid` to generate these. Don't change the keys later, or devices stop getting
+# notifications until they turn them on again.
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_CONTACT=

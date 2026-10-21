@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DueDate, DueTime } from "./note.ts";
 
 /** Notes in `failed` are retried until they hit this many attempts. */
 export const MAX_ATTEMPTS = 3;
@@ -18,6 +19,9 @@ export const ClaimedNote = z.object({
   id: z.string(),
   raw_text: z.string(),
   claim_token: z.string(),
+  created_at: z.string(),
+  /** Null for notes captured before timezones were recorded; the worker falls back to its own. */
+  tz: z.string().nullable(),
 });
 export type ClaimedNote = z.infer<typeof ClaimedNote>;
 
@@ -30,6 +34,10 @@ export const CompleteInput = z.object({
   category: z.string().trim().min(1).max(40),
   tags: z.array(z.string()).max(12),
   uncertain: z.array(z.string().trim().min(1).max(200)).max(5).default([]),
+  due_date: DueDate.nullable().default(null),
+  due_time: DueTime.nullable().default(null),
+  /** The timezone the due date was worked out in (the capture's, or the worker's fallback). */
+  tz: z.string().min(1).max(64).nullable().default(null),
   model_id: z.string().min(1).max(80),
   processing_version: z.number().int().min(1),
 });

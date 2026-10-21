@@ -4,6 +4,8 @@ import type {
   ClaimedAsk,
   ClaimedNote,
   CompleteInput,
+  Digest,
+  DigestInput,
   FailInput,
   Note,
   WorkerStatus,
@@ -15,6 +17,7 @@ export interface NoteSearch {
   match?: "all" | "any";
   from?: string;
   to?: string;
+  due?: string;
   limit?: number;
 }
 
@@ -87,6 +90,14 @@ export class MimuApi {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(search)) if (value !== undefined && value !== "") params.set(key, String(value));
     return (await this.request<{ notes: Note[] }>(`/notes?${params}`)).notes;
+  }
+
+  async latestDigest(): Promise<Digest | null> {
+    return (await this.request<{ digest: Digest | null }>("/digests/latest")).digest;
+  }
+
+  saveDigest(input: DigestInput): Promise<Digest> {
+    return this.request("/worker/digests", { method: "POST", body: JSON.stringify(input) });
   }
 
   async claimAsk(): Promise<ClaimedAsk | null> {

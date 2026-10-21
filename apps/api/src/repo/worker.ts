@@ -33,13 +33,15 @@ export async function claimNotes(db: Client, limit: number, now = new Date()): P
             ORDER BY created_at
             LIMIT ?
           )
-          RETURNING id, raw_text, claim_token`,
+          RETURNING id, raw_text, claim_token, created_at, tz`,
     args: [nowIso, nowIso, MAX_ATTEMPTS, retryBefore, staleBefore, limit],
   });
   return result.rows.map((row) => ({
     id: String(row.id),
     raw_text: String(row.raw_text),
     claim_token: String(row.claim_token),
+    created_at: String(row.created_at),
+    tz: row.tz === null ? null : String(row.tz),
   }));
 }
 
@@ -66,6 +68,7 @@ export async function completeNote(db: Client, id: string, input: CompleteData):
     await tx.execute({
       sql: `UPDATE notes SET
               title = ?, markdown = ?, summary = ?, category_id = ?, uncertain = ?, status = 'processed',
+              due_date = ?, due_time = ?, tz = COALESCE(tz, ?),
               attempt_count = attempt_count + 1, error_message = NULL, claim_token = NULL, claimed_at = NULL,
               model_id = ?, processing_version = ?, processed_at = ?, updated_at = ?
             WHERE id = ?`,
@@ -75,6 +78,9 @@ export async function completeNote(db: Client, id: string, input: CompleteData):
         input.summary,
         categoryId,
         JSON.stringify(input.uncertain),
+        input.due_date,
+        input.due_date ? input.due_time : null,
+        input.tz,
         input.model_id,
         input.processing_version,
         now,

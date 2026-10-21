@@ -16,7 +16,9 @@ import {
   insertAccount,
   issueKey,
   linkGithub,
+  markPushEnabled,
   pruneShortLived,
+  pushAccounts,
   redeemLoginCode,
   redeemOAuthState,
   removeAccount,
@@ -24,6 +26,8 @@ import {
   type Account,
 } from "./accounts.ts";
 import { fetchGithubUser, githubAuthorizeUrl, type GithubConfig } from "./github.ts";
+import { sendDueReminders } from "../push/reminders.ts";
+import type { PushConfig } from "../push/send.ts";
 import type { Provisioner } from "./provisioner.ts";
 import { seedNotes } from "./seed.ts";
 import { randomSecret, sha256 } from "./tokens.ts";
@@ -42,6 +46,7 @@ export interface HostedDeps {
   appUrl?: string;
   /** Path prefix the API is served under ("/api" on the Worker), used to build the OAuth callback URL. */
   apiPrefix?: string;
+  push?: PushConfig;
 }
 
 type Resolved = { kind: "owner"; db: Client } | { kind: "account"; db: Client; account: Account };
@@ -71,6 +76,7 @@ async function migrateWithRetry(db: Client, attempts = 6): Promise<void> {
 export async function createAccount(
   deps: HostedDeps,
   github?: { id: string; login: string },
+  timeZone = "UTC",
 ): Promise<Account | null> {
   if ((await countAccounts(deps.accounts)) >= deps.maxAccounts) return null;
   const id = crypto.randomUUID();
@@ -79,7 +85,7 @@ export async function createAccount(
   try {
     const db = deps.connect(dbUrl);
     await migrateWithRetry(db);
-    await seedNotes(db);
+    await seedNotes(db, timeZone);
     await insertAccount(deps.accounts, { id, db_name: dbName, db_url: dbUrl, github_id: github?.id, github_login: github?.login });
   } catch (error) {
     await deps.provisioner.delete(dbName).catch((cleanup) => console.error("cleanup failed", cleanup));
@@ -91,6 +97,24 @@ export async function createAccount(
 export async function deleteAccount(deps: HostedDeps, account: Account): Promise<void> {
   await deps.provisioner.delete(account.db_name);
   await removeAccount(deps.accounts, account.id);
+}
+
+/** Reminders for the owner's notes and every account with notifications on. Runs from the 5-minute cron. */
+export async function sendHostedReminders(deps: HostedDeps, now = new Date()): Promise<number> {
+  if (!deps.push) return 0;
+  const databases = [
+    ...(deps.owner ? [deps.owner.db] : []),
+    ...(await pushAccounts(deps.accounts)).map((account) => deps.connect(account.db_url)),
+  ];
+  let sent = 0;
+  for (const db of databases) {
+    try {
+      sent += (await sendDueReminders(db, deps.push, now)).length;
+    } catch (error) {
+      console.error("Reminder sweep failed for one database", error);
+    }
+  }
+  return sent;
 }
 
 /** Delete demo accounts nobody has used in 30 days. Runs from the Worker's daily cron. */
@@ -150,6 +174,22 @@ export function createHostedApp(deps: HostedDeps) {
     return resolved.account;
   }
 
+  /**
+   * The visitor's timezone, so sample due dates like "tomorrow at 2" land on the right day. The app sends its own
+   * on sign-up; for GitHub sign-in, Cloudflare's guess from the request is the fallback.
+   */
+  const visitorTimeZone = (c: Context, fromApp?: unknown) => {
+    const zone =
+      (typeof fromApp === "string" && fromApp) || (c.req.raw as Request & { cf?: { timezone?: string } }).cf?.timezone;
+    if (!zone) return "UTC";
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: zone });
+      return zone;
+    } catch {
+      return "UTC";
+    }
+  };
+
   app.get("/health", (c) => c.json({ ok: true }));
 
   app.get("/auth/config", async (c) =>
@@ -161,7 +201,8 @@ export function createHostedApp(deps: HostedDeps) {
   );
 
   app.post("/accounts", async (c) => {
-    const account = await createAccount(deps);
+    const body = (await c.req.json().catch(() => null)) as { tz?: unknown } | null;
+    const account = await createAccount(deps, undefined, visitorTimeZone(c, body?.tz));
     if (!account) return c.json({ error: "demo_full" }, 403);
     return c.json({ key: await issueKey(deps.accounts, account.id) }, 201);
   });
@@ -228,7 +269,7 @@ export function createHostedApp(deps: HostedDeps) {
       return c.redirect(`${appUrl(c)}/#/account?github=${linked ? "linked" : "taken"}`);
     }
 
-    const account = (await findAccountByGithub(deps.accounts, user.id)) ?? (await createAccount(deps, user));
+    const account = (await findAccountByGithub(deps.accounts, user.id)) ?? (await createAccount(deps, user, visitorTimeZone(c)));
     if (!account) return signinRedirect(c, { error: "full" });
     return signinRedirect(c, { code: await createLoginCode(deps.accounts, account.id) });
   });
@@ -237,7 +278,11 @@ export function createHostedApp(deps: HostedDeps) {
     const key = bearer(c);
     const resolved = await resolve(key);
     if (!resolved) return c.json({ error: "unauthorized" }, 401);
-    return createApp(resolved.db, key).fetch(c.req.raw);
+    const accountId = resolved.kind === "account" ? resolved.account.id : null;
+    return createApp(resolved.db, key, {
+      push: deps.push,
+      onPushSubscribed: accountId ? () => markPushEnabled(deps.accounts, accountId) : undefined,
+    }).fetch(c.req.raw);
   });
 
   app.onError((error, c) => {

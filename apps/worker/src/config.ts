@@ -13,6 +13,8 @@ export interface WorkerConfig {
   pollMs: number;
   askPollMs: number;
   batchSize: number;
+  /** Hour (0-23, this computer's clock) when the morning digest gets written. */
+  digestHour: number;
 }
 
 export const DEFAULT_MODEL = "gemma4:e4b";
@@ -35,6 +37,13 @@ function number(env: NodeJS.ProcessEnv, name: string, fallback: number): number 
   return value;
 }
 
+function digestHour(raw: string | undefined): number {
+  if (raw === undefined || raw.trim() === "") return 8;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0 || value > 23) throw new Error("MIMU_DIGEST_HOUR must be a whole hour from 0 to 23");
+  return value;
+}
+
 export function loadConfig(saved: SavedSettings = {}, env: NodeJS.ProcessEnv = process.env): WorkerConfig {
   return {
     apiUrl: required(env.MIMU_API_URL || saved.apiUrl, "MIMU_API_URL").replace(/\/+$/, ""),
@@ -45,5 +54,6 @@ export function loadConfig(saved: SavedSettings = {}, env: NodeJS.ProcessEnv = p
     pollMs: number(env, "MIMU_POLL_SECONDS", 10) * 1000,
     askPollMs: number(env, "MIMU_ASK_POLL_SECONDS", 3) * 1000,
     batchSize: number(env, "MIMU_BATCH_SIZE", 5),
+    digestHour: digestHour(env.MIMU_DIGEST_HOUR),
   };
 }

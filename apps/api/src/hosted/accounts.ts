@@ -181,3 +181,12 @@ export async function pruneShortLived(db: Client, now = new Date()): Promise<voi
 export function expiresAt(account: Account): string {
   return new Date(Date.parse(account.last_seen_at) + ACCOUNT_TTL_MS).toISOString();
 }
+
+export async function markPushEnabled(db: Client, accountId: string): Promise<void> {
+  await db.execute({ sql: "UPDATE accounts SET push_enabled = 1 WHERE id = ? AND push_enabled = 0", args: [accountId] });
+}
+
+/** Accounts where some device turned on notifications: the only ones the reminder cron needs to open. */
+export async function pushAccounts(db: Client): Promise<Account[]> {
+  return (await db.execute("SELECT * FROM accounts WHERE push_enabled = 1")).rows.map(rowToAccount);
+}

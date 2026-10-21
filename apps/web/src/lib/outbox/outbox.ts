@@ -29,7 +29,13 @@ export class Outbox {
   }
 
   async add(rawText: string): Promise<CaptureInput> {
-    const capture: CaptureInput = { id: crypto.randomUUID(), raw_text: rawText.trim(), created_at: new Date().toISOString() };
+    const capture: CaptureInput = {
+      id: crypto.randomUUID(),
+      raw_text: rawText.trim(),
+      created_at: new Date().toISOString(),
+      // Lets Gemma turn "thursday at 2" into the right day and hour where you are.
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
     await outboxStore.put(capture);
     void this.flush();
     return capture;

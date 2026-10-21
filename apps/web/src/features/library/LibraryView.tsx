@@ -7,6 +7,7 @@ import { filterLabel, sameFilter, type LibraryFilter } from "./filters.ts";
 import { NoteDetail } from "./NoteDetail.tsx";
 import { NoteList } from "./NoteList.tsx";
 import { useNotes } from "./useLibrary.ts";
+import { TodayCard } from "../today/TodayCard.tsx";
 import "./library.css";
 
 interface Props {
@@ -101,6 +102,8 @@ export function LibraryView({ api, route, navigate, filter, onFilter, categories
             <FilterChip key={t.slug} filter={{ kind: "tag", slug: t.slug }} active={filter} onFilter={onFilter} />
           ))}
         </div>
+
+        {filter.kind === "all" && !search.trim() && <TodayCard api={api} refreshKey={unsorted} />}
 
         {state.status === "error" && (
           <p className="form-error library__error" role="alert">

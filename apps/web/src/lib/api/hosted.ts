@@ -38,7 +38,8 @@ export async function getAuthConfig(apiUrl: string, signal?: AbortSignal): Promi
 
 /** Create a demo account. Returns its access key. */
 export async function createDemoAccount(apiUrl: string): Promise<string> {
-  return (await post<{ key: string }>(apiUrl, "/accounts")).key;
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return (await post<{ key: string }>(apiUrl, "/accounts", { tz })).key;
 }
 
 /** Swap the one-time code from GitHub sign-in for an access key. */

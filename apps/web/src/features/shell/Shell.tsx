@@ -48,7 +48,7 @@ export function Shell({ api, connection, outbox, onReconnect, onSignOut }: Props
         onCapture={() => navigate({ view: "capture" })}
         onAsk={() => navigate({ view: "ask" })}
         onDesktop={() => navigate({ view: "desktop" })}
-        onAccount={isDemo ? () => navigate({ view: "account" }) : undefined}
+        onAccount={() => navigate({ view: "account" })}
         onFilter={showFilter}
         onReconnect={onReconnect}
       />
@@ -59,7 +59,7 @@ export function Shell({ api, connection, outbox, onReconnect, onSignOut }: Props
           <CaptureScreen
             outbox={outbox}
             onReconnect={onReconnect}
-            onAccount={isDemo ? () => navigate({ view: "account" }) : undefined}
+            onAccount={() => navigate({ view: "account" })}
             onSetUpDesktop={workerNeverSeen ? () => navigate({ view: "desktop" }) : undefined}
           />
         </div>
@@ -89,7 +89,7 @@ export function Shell({ api, connection, outbox, onReconnect, onSignOut }: Props
         )}
         {inAccount && (
           <div className="shell__pane">
-            <AccountView api={api} connection={connection} onSignOut={onSignOut} />
+            <AccountView api={api} connection={connection} isDemo={isDemo} onSignOut={onSignOut} />
           </div>
         )}
       </div>

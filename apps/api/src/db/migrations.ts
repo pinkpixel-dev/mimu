@@ -94,6 +94,45 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX asks_status_created_idx ON asks (status, created_at)`,
     ],
   },
+  {
+    version: 4,
+    name: "due dates and timezones",
+    statements: [
+      // The capturing device's IANA timezone, and when the note says something should happen (in that timezone).
+      `ALTER TABLE notes ADD COLUMN tz TEXT`,
+      `ALTER TABLE notes ADD COLUMN due_date TEXT`,
+      `ALTER TABLE notes ADD COLUMN due_time TEXT`,
+      `CREATE INDEX notes_due_idx ON notes (due_date, due_time)`,
+    ],
+  },
+  {
+    version: 5,
+    name: "morning digest",
+    statements: [
+      `CREATE TABLE digests (
+        date TEXT PRIMARY KEY,
+        tz TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        note_ids TEXT NOT NULL DEFAULT '[]',
+        created_at TEXT NOT NULL
+      )`,
+    ],
+  },
+  {
+    version: 6,
+    name: "push notifications",
+    statements: [
+      // One row per device that turned on notifications.
+      `CREATE TABLE push_subscriptions (
+        endpoint TEXT PRIMARY KEY,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )`,
+      // Set once a note's "coming up" reminder has gone out, so it's never sent twice.
+      `ALTER TABLE notes ADD COLUMN reminded_at TEXT`,
+    ],
+  },
 ];
 
 export async function migrate(db: Client, migrations: readonly Migration[] = MIGRATIONS): Promise<number[]> {
