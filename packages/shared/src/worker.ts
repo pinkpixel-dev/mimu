@@ -47,5 +47,12 @@ export type FailInput = z.infer<typeof FailInput>;
 export const WorkerStatus = z.object({
   organize_requested_at: z.string().nullable(),
   pending: z.number().int(),
+  /** When the desktop worker last checked in, to the nearest minute. Null if it never has. */
+  worker_seen_at: z.string().nullable(),
 });
+
+/** Header the desktop worker sends on its status poll, so the API can tell it apart from the web app. */
+export const WORKER_HEADER = "X-Mimu-Worker";
+/** How often the API refreshes `worker_seen_at`, at most. Keeps the status poll from writing every 10 seconds. */
+export const WORKER_SEEN_RESOLUTION_MS = 60_000;
 export type WorkerStatus = z.infer<typeof WorkerStatus>;

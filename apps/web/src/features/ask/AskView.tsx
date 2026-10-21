@@ -108,7 +108,13 @@ function AskCard({ ask, onRetry }: { ask: Ask; onRetry: (event: FormEvent) => vo
       {isOpen(ask) && (
         <div className="ask-card__thinking">
           <img src={searching} alt="" width={40} height={40} />
-          <span>{slow ? "Still waiting. Is the Mimu worker running on your desktop?" : "Mimu is looking through your notes…"}</span>
+          {slow ? (
+            <span>
+              Still waiting. Is the Mimu worker running on your desktop? <a href="#/desktop">Set it up</a>
+            </span>
+          ) : (
+            <span>Mimu is looking through your notes…</span>
+          )}
         </div>
       )}
       {ask.status === "answered" && ask.answer && (

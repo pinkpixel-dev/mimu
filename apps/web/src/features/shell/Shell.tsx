@@ -1,9 +1,11 @@
 import { useState } from "react";
 import type { ApiClient } from "../../lib/api/client.ts";
+import type { Connection } from "../../lib/connection.ts";
 import type { Outbox } from "../../lib/outbox/outbox.ts";
 import { useRoute } from "../../lib/router.ts";
 import { AskView } from "../ask/AskView.tsx";
 import { CaptureScreen } from "../capture/CaptureScreen.tsx";
+import { DesktopView } from "../desktop/DesktopView.tsx";
 import type { LibraryFilter } from "../library/filters.ts";
 import { LibraryView } from "../library/LibraryView.tsx";
 import { useTaxonomy } from "../library/useLibrary.ts";
@@ -12,16 +14,18 @@ import "./shell.css";
 
 interface Props {
   api: ApiClient;
+  connection: Connection;
   outbox: Outbox;
   onReconnect: () => void;
 }
 
-export function Shell({ api, outbox, onReconnect }: Props) {
+export function Shell({ api, connection, outbox, onReconnect }: Props) {
   const [route, navigate] = useRoute();
   const [filter, setFilter] = useState<LibraryFilter>({ kind: "all" });
   const { categories, tags, refresh } = useTaxonomy(api);
   const inLibrary = route.view === "library" || route.view === "note";
   const inAsk = route.view === "ask";
+  const inDesktop = route.view === "desktop";
 
   const showFilter = (next: LibraryFilter) => {
     setFilter(next);
@@ -38,13 +42,14 @@ export function Shell({ api, outbox, onReconnect }: Props) {
         outbox={outbox}
         onCapture={() => navigate({ view: "capture" })}
         onAsk={() => navigate({ view: "ask" })}
+        onDesktop={() => navigate({ view: "desktop" })}
         onFilter={showFilter}
         onReconnect={onReconnect}
       />
 
       <div className="shell__main">
         {/* Capture stays mounted so switching tabs doesn't reload the speech model. */}
-        <div className="shell__pane" hidden={inLibrary || inAsk}>
+        <div className="shell__pane" hidden={inLibrary || inAsk || inDesktop}>
           <CaptureScreen outbox={outbox} onReconnect={onReconnect} />
         </div>
         {inLibrary && (
@@ -64,6 +69,11 @@ export function Shell({ api, outbox, onReconnect }: Props) {
         {inAsk && (
           <div className="shell__pane">
             <AskView api={api} />
+          </div>
+        )}
+        {inDesktop && (
+          <div className="shell__pane">
+            <DesktopView api={api} connection={connection} />
           </div>
         )}
       </div>

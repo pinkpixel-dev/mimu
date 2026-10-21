@@ -164,6 +164,19 @@ describe("worker flow", () => {
     assert.equal(status.body.organize_requested_at, requested.body.organize_requested_at);
     assert.ok(status.body.pending >= 1);
   });
+
+  test("only the desktop worker's status poll counts as a check-in", async () => {
+    const fromApp = await call<{ worker_seen_at: string | null }>("GET", "/worker/status");
+    assert.equal(fromApp.body.worker_seen_at, null);
+
+    const res = await app.request("/worker/status", { headers: { Authorization: `Bearer ${KEY}`, "X-Mimu-Worker": "1" } });
+    const seen = ((await res.json()) as { worker_seen_at: string | null }).worker_seen_at;
+    assert.ok(seen && Date.now() - Date.parse(seen) < 5000);
+
+    // A second check-in within the minute doesn't rewrite the timestamp.
+    await app.request("/worker/status", { headers: { Authorization: `Bearer ${KEY}`, "X-Mimu-Worker": "1" } });
+    assert.equal((await call<{ worker_seen_at: string }>("GET", "/worker/status")).body.worker_seen_at, seen);
+  });
 });
 
 describe("ask mimu", () => {

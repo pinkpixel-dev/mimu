@@ -8,6 +8,7 @@ import type {
   Note,
   WorkerStatus,
 } from "@mimu/shared";
+import { WORKER_HEADER } from "@mimu/shared";
 
 export interface NoteSearch {
   q?: string;
@@ -40,6 +41,7 @@ export class MimuApi {
       headers: {
         Authorization: `Bearer ${this.accessKey}`,
         ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...init.headers,
       },
       signal: AbortSignal.timeout(30_000),
     });
@@ -55,8 +57,9 @@ export class MimuApi {
     return (await response.json()) as T;
   }
 
+  /** Also the worker's check-in, which is how the app knows the desktop is connected. */
   status(): Promise<WorkerStatus> {
-    return this.request("/worker/status");
+    return this.request("/worker/status", { headers: { [WORKER_HEADER]: "1" } });
   }
 
   async categories(): Promise<string[]> {

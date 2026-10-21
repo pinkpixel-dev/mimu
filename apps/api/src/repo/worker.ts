@@ -1,5 +1,14 @@
 import type { Client } from "@libsql/client";
-import { CLAIM_TTL_MS, MAX_ATTEMPTS, RETRY_BACKOFF_MS, type ClaimedNote, type CompleteData, type FailInput, type WorkerStatus } from "@mimu/shared";
+import {
+  CLAIM_TTL_MS,
+  MAX_ATTEMPTS,
+  RETRY_BACKOFF_MS,
+  WORKER_SEEN_RESOLUTION_MS,
+  type ClaimedNote,
+  type CompleteData,
+  type FailInput,
+  type WorkerStatus,
+} from "@mimu/shared";
 import { resolveCategory, setTags } from "./taxonomy.ts";
 
 /**
@@ -101,10 +110,19 @@ export async function requestOrganize(db: Client): Promise<string> {
   return now;
 }
 
+/** Record that the desktop worker checked in. Only writes when the stored time is over a minute old. */
+export async function markWorkerSeen(db: Client, now = new Date()): Promise<void> {
+  await db.execute({
+    sql: `INSERT INTO settings (key, value) VALUES ('worker_seen_at', ?)
+          ON CONFLICT (key) DO UPDATE SET value = excluded.value WHERE settings.value < ?`,
+    args: [now.toISOString(), new Date(now.getTime() - WORKER_SEEN_RESOLUTION_MS).toISOString()],
+  });
+}
+
 export async function workerStatus(db: Client): Promise<WorkerStatus> {
-  const [setting, pending] = await db.batch(
+  const [settings, pending] = await db.batch(
     [
-      "SELECT value FROM settings WHERE key = 'organize_requested_at'",
+      "SELECT key, value FROM settings WHERE key IN ('organize_requested_at', 'worker_seen_at')",
       {
         sql: "SELECT COUNT(*) AS count FROM notes WHERE user_edited = 0 AND (status = 'pending' OR (status = 'failed' AND attempt_count < ?))",
         args: [MAX_ATTEMPTS],
@@ -112,9 +130,13 @@ export async function workerStatus(db: Client): Promise<WorkerStatus> {
     ],
     "read",
   );
-  const requested = setting?.rows[0]?.value;
+  const setting = (key: string) => {
+    const value = settings?.rows.find((row) => row.key === key)?.value;
+    return value === undefined || value === null ? null : String(value);
+  };
   return {
-    organize_requested_at: requested === undefined || requested === null ? null : String(requested),
+    organize_requested_at: setting("organize_requested_at"),
     pending: Number(pending?.rows[0]?.count ?? 0),
+    worker_seen_at: setting("worker_seen_at"),
   };
 }

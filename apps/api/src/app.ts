@@ -12,13 +12,14 @@ import {
   FailInput,
   NotePatch,
   NoteQuery,
+  WORKER_HEADER,
 } from "@mimu/shared";
 import { answerAsk, claimAsk, createAsk, failAsk, getAsk, listAsks } from "./repo/asks.ts";
 import { requireAccessKey } from "./auth.ts";
 import { markdownDownload, zipDownload } from "./export.ts";
 import { allNotes, createNote, deleteNote, getNote, listNotes, patchNote } from "./repo/notes.ts";
 import { listCategories, listTags } from "./repo/taxonomy.ts";
-import { claimNotes, completeNote, failNote, requestOrganize, workerStatus } from "./repo/worker.ts";
+import { claimNotes, completeNote, failNote, markWorkerSeen, requestOrganize, workerStatus } from "./repo/worker.ts";
 
 async function parseBody<T extends z.ZodType>(c: Context, schema: T): Promise<z.infer<T> | Response> {
   let body: unknown;
@@ -123,7 +124,10 @@ export function createApp(db: Client, accessKey: string) {
     return (await failAsk(db, c.req.param("id"), input)) ? c.body(null, 204) : c.json({ error: "stale_claim" }, 409);
   });
 
-  app.get("/worker/status", async (c) => c.json(await workerStatus(db)));
+  app.get("/worker/status", async (c) => {
+    if (c.req.header(WORKER_HEADER)) await markWorkerSeen(db);
+    return c.json(await workerStatus(db));
+  });
 
   app.post("/worker/claim", async (c) => {
     const input = await parseBody(c, ClaimInput);

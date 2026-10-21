@@ -24,11 +24,12 @@ export function App() {
     };
   }, [outbox]);
 
-  if (!api || !outbox) return <ConnectScreen onConnected={setConnection} />;
+  if (!connection || !api || !outbox) return <ConnectScreen onConnected={setConnection} />;
 
   return (
     <Shell
       api={api}
+      connection={connection}
       outbox={outbox}
       onReconnect={() => {
         clearConnection();

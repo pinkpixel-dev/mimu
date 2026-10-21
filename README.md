@@ -46,7 +46,7 @@ The speech recognition runs on your phone, and the organizing runs on your deskt
 
 ## What you need
 
-- **Node.js 22+** and **pnpm 11**
+- **Node.js 22+** and **pnpm 11** to set up the server (the desktop only needs Node.js 22+ and npm)
 - **[Ollama](https://ollama.com)** on the computer that will organize your notes. A GPU helps a lot. I use an RTX 4090 laptop GPU, where a note takes about 4 seconds.
 - A free **[Cloudflare](https://cloudflare.com)** account (the app and API run on one Worker)
 - A free **[Turso](https://turso.tech)** account (the database)
@@ -54,6 +54,8 @@ The speech recognition runs on your phone, and the organizing runs on your deskt
 Mimu is single-user. You deploy your own copy, and one access key protects it.
 
 ## Setup
+
+Setup has two halves. The server half runs once from the repo and puts the app and API on Cloudflare. The desktop half is one command you paste into a terminal on the computer that runs Gemma.
 
 ### 1. Install
 
@@ -63,11 +65,52 @@ cd mimu
 pnpm install
 ```
 
-### 2. Create the database
+### 2. Run the quickstart
 
-Create a database in the [Turso dashboard](https://app.turso.tech) and copy its URL (it starts with `libsql://`) and an auth token.
+Create a database in the [Turso dashboard](https://app.turso.tech) first, and keep its URL (it starts with `libsql://`) and an auth token handy. Then run:
 
-### 3. Add your secrets
+```bash
+pnpm quickstart
+```
+
+It asks for the Turso URL and token, generates an access key, sets up the database tables, builds the app, and deploys it to Cloudflare. If you're not logged in to Wrangler yet, it opens your browser for that. At the end, it prints your Mimu URL, your access key, and the desktop command.
+
+Everything it sets up is saved in `apps/api/.dev.vars`, so running it again reuses the same database and key and just redeploys. That's also how you update your deploy after pulling new changes.
+
+It's `pnpm quickstart` and not `pnpm setup`, because `pnpm setup` is one of pnpm's own commands.
+
+### 3. Connect your desktop
+
+Install [Ollama](https://ollama.com/download) on the computer that will organize your notes. Then open Mimu, go to **Desktop** in the sidebar, tap **Copy**, and paste the command into a terminal on that computer. It looks like this:
+
+```bash
+npm install -g @pinkpixel/mimu-worker && mimu-worker setup --url https://mimu-api.<you>.workers.dev/api --key your-access-key
+```
+
+That installs the Mimu worker, checks your key, downloads `gemma4:e4b` if you don't have it yet (a few GB, one time), and sets the worker up to start in the background whenever you log in. On Linux that's a systemd user service, and on macOS it's a launchd agent. The Desktop page switches to **Connected** within a few seconds.
+
+To watch it work on Linux:
+
+```bash
+journalctl --user -u mimu-worker -f
+```
+
+On macOS, the log is at `~/Library/Logs/mimu-worker.log`.
+
+I've tested the background service on Linux. The macOS version is written but I haven't been able to try it on a Mac yet. On Windows (or anywhere you'd rather not have a service), run `mimu-worker` in a terminal and leave it open.
+
+The worker saves its settings in `~/.config/mimu/worker.json`. Other `mimu-worker` commands:
+
+```bash
+mimu-worker                    # run in this terminal instead of the background
+mimu-worker install-service    # turn the background service back on
+mimu-worker uninstall-service  # stop starting at login (settings stay saved)
+mimu-worker --help
+```
+
+### Manual setup
+
+If you'd rather do each step yourself, this is everything the quickstart does.
 
 Create `apps/api/.dev.vars`. The file name starts with a dot, and that matters: the dotted name is the one that's gitignored.
 
@@ -83,44 +126,28 @@ You can generate an access key with:
 openssl rand -hex 32
 ```
 
-### 4. Set up the database tables
+Set up the database tables:
 
 ```bash
 pnpm migrate
 ```
 
-### 5. Deploy to Cloudflare
-
-Log in to Wrangler if you haven't yet, then add the same three values as Worker secrets:
+Log in to Wrangler, then build and deploy the app and API together, uploading the same three values as Worker secrets:
 
 ```bash
 cd apps/api
 pnpm exec wrangler login
-pnpm exec wrangler secret put TURSO_DATABASE_URL
-pnpm exec wrangler secret put TURSO_AUTH_TOKEN
-pnpm exec wrangler secret put MIMU_ACCESS_KEY
+pnpm --filter @mimu/web build
+pnpm exec wrangler deploy --secrets-file .dev.vars
 cd ../..
 ```
 
-Then build and deploy the app and API together:
+Wrangler prints your URL when it's done, something like `https://mimu-api.<you>.workers.dev`. You can also attach a custom domain in the Cloudflare dashboard.
 
-```bash
-pnpm --filter @mimu/api run deploy
-```
-
-The `run` part is needed, because `pnpm deploy` is one of pnpm's own commands. Wrangler prints your URL when it's done, something like `https://mimu-api.<you>.workers.dev`. You can also attach a custom domain in the Cloudflare dashboard.
-
-### 6. Start the desktop worker
-
-Pull the model:
+For the desktop worker, you can also run it straight from the repo instead of installing the npm package. Pull the model and copy the example config:
 
 ```bash
 ollama pull gemma4:e4b
-```
-
-Copy the example config and fill it in:
-
-```bash
 cp apps/worker/.env.example apps/worker/.env
 ```
 
@@ -135,7 +162,7 @@ Make sure the URL ends in `/api`. Then start the worker and leave it running:
 pnpm worker
 ```
 
-The `.env` file also has optional settings for the Ollama host, the model, how often it runs (`MIMU_INTERVAL_MINUTES`, default 60), how often it checks for **Organize now** (`MIMU_POLL_SECONDS`, default 10), and how often it checks for new questions (`MIMU_ASK_POLL_SECONDS`, default 3).
+The `.env` file also has optional settings for the Ollama host, the model, how often it runs (`MIMU_INTERVAL_MINUTES`, default 60), how often it checks for **Organize now** (`MIMU_POLL_SECONDS`, default 10), and how often it checks for new questions (`MIMU_ASK_POLL_SECONDS`, default 3). These environment variables work with the npm version too, and they win over whatever `mimu-worker setup` saved.
 
 ## Using Mimu
 
@@ -145,6 +172,7 @@ The `.env` file also has optional settings for the Ollama host, the model, how o
 4. Your note shows up in **Library → Unsorted** as "Waiting for Mimu" until the desktop worker organizes it. Tap **Organize now** if you don't want to wait for the hourly run.
 5. Open a note to read it, check the original transcript, **Edit** it, or **Export** it. **Export all** in the library downloads everything.
 6. Open **Ask** and ask about anything you've saved. Answers usually take a few seconds and link to the notes they came from. Your desktop worker needs to be running for this.
+7. Open **Desktop** any time to check whether your desktop worker is connected, or to copy the setup command again.
 
 The first time you open the capture screen, it downloads the Whisper model (about 41 MB). After that, it's cached.
 
@@ -181,10 +209,16 @@ Add `/api` to the end of `MIMU_API_URL`. Every other path on the Worker serves t
 That's iOS killing the tab, which happened with WebGPU on my iPhone. Mimu uses WASM by default for this reason. If you've added `?runtime=webgpu` to the URL, remove it. Open **Speech runtime** at the bottom of the capture screen to see which backend is in use.
 
 **Notes stay "Waiting for Mimu".**
-Make sure `pnpm worker` is running, that Ollama is running, and that the model is pulled (`ollama list`). The worker logs every note it organizes.
+Open **Desktop** in the app. If it doesn't say **Connected**, check that the worker is running (`systemctl --user status mimu-worker` on Linux, or `pnpm worker` if you run it from the repo), that Ollama is running, and that the model is pulled (`ollama list`). The worker logs every note it organizes.
 
 **Ask Mimu says "Still waiting. Is the Mimu worker running on your desktop?"**
-Questions sit in a queue until the worker picks them up. Start `pnpm worker`, and the waiting question gets answered within a few seconds.
+Questions sit in a queue until the worker picks them up. Start the worker (see above), and the waiting question gets answered within a few seconds.
+
+**The background service stopped working after I changed Node versions.**
+The service remembers the exact Node.js path it was installed with. If that version goes away (say you removed it with nvm), run `mimu-worker install-service` again from the Node version you're using now.
+
+**`mimu-worker setup` says "Mimu rejected that access key".**
+Copy the command again from the **Desktop** page. If you changed the key, the old command has the old one in it.
 
 **"Key rejected · Reconnect" shows up in the app.**
 The access key changed. Tap it and enter the new one. Anything you saved is still queued on the device.
@@ -219,8 +253,8 @@ pnpm typecheck
 Two small scripts compare models and prompts on sample transcripts:
 
 ```bash
-pnpm --filter @mimu/worker spike:gemma gemma4:e4b gemma4:12b
-pnpm --filter @mimu/worker spike:uncertain gemma4:e4b
+pnpm --filter @pinkpixel/mimu-worker spike:gemma gemma4:e4b gemma4:12b
+pnpm --filter @pinkpixel/mimu-worker spike:uncertain gemma4:e4b
 ```
 
 ### Project layout
@@ -229,7 +263,7 @@ pnpm --filter @mimu/worker spike:uncertain gemma4:e4b
 apps/
   web/      React + Vite app: capture, library, export, connect screen
   api/      Hono API on Cloudflare Workers; also serves the built web app
-  worker/   Node worker that organizes notes with Gemma through Ollama
+  worker/   Node worker that organizes notes with Gemma through Ollama (published as @pinkpixel/mimu-worker)
 packages/
   shared/   Schemas, slug helpers, and the Markdown export format
 assets/     Mascot and app icon

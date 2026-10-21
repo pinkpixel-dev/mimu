@@ -1,22 +1,45 @@
 {
-  "name": "@mimu/worker",
+  "name": "@pinkpixel/mimu-worker",
   "version": "0.1.0",
-  "private": true,
+  "description": "The desktop half of Mimu: organizes your voice notes and answers questions about them with a local model through Ollama.",
+  "license": "Apache-2.0",
+  "author": "Pink Pixel <admin@pinkpixel.dev> (https://pinkpixel.dev)",
+  "homepage": "https://github.com/pinkpixel-dev/mimu#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pinkpixel-dev/mimu.git",
+    "directory": "apps/worker"
+  },
+  "keywords": ["mimu", "notes", "voice-notes", "ollama", "gemma", "local-ai"],
   "type": "module",
+  "bin": {
+    "mimu-worker": "dist/cli.js"
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "start": "tsx --env-file-if-exists=.env src/main.ts",
+    "start": "tsx --env-file-if-exists=.env src/cli.ts start",
+    "setup": "tsx --env-file-if-exists=.env src/cli.ts setup",
+    "build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node22 --external:ollama --external:zod --outfile=dist/cli.js",
+    "prepack": "pnpm run build",
     "spike:gemma": "tsx scripts/spike-gemma.ts",
     "spike:uncertain": "tsx scripts/spike-uncertain.ts",
     "typecheck": "tsc -p .",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
-    "@mimu/shared": "workspace:*",
     "ollama": "^0.6.4",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@mimu/shared": "workspace:*",
     "@types/node": "^22.19.0",
+    "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }

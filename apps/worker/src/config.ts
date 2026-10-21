@@ -1,4 +1,9 @@
-/** Worker settings, read from the environment (apps/worker/.env is loaded automatically when present). */
+import type { SavedSettings } from "./settings-file.ts";
+
+/**
+ * Worker settings. Environment variables win (apps/worker/.env is loaded automatically in development),
+ * then whatever `mimu-worker setup` saved, then defaults.
+ */
 export interface WorkerConfig {
   apiUrl: string;
   accessKey: string;
@@ -10,28 +15,35 @@ export interface WorkerConfig {
   batchSize: number;
 }
 
-function required(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) throw new Error(`${name} is not set. Copy apps/worker/.env.example to apps/worker/.env and fill it in.`);
-  return value;
+export const DEFAULT_MODEL = "gemma4:e4b";
+export const DEFAULT_OLLAMA_HOST = "http://127.0.0.1:11434";
+
+function required(value: string | undefined, name: string): string {
+  if (!value?.trim()) {
+    throw new Error(
+      `${name} is not set. Run "mimu-worker setup --url <your Mimu URL>/api --key <access key>", ` +
+        `or copy apps/worker/.env.example to apps/worker/.env when running from the repo.`,
+    );
+  }
+  return value.trim();
 }
 
-function number(name: string, fallback: number): number {
-  const raw = process.env[name];
+function number(env: NodeJS.ProcessEnv, name: string, fallback: number): number {
+  const raw = env[name];
   const value = raw === undefined ? fallback : Number(raw);
   if (!Number.isFinite(value) || value <= 0) throw new Error(`${name} must be a positive number`);
   return value;
 }
 
-export function loadConfig(): WorkerConfig {
+export function loadConfig(saved: SavedSettings = {}, env: NodeJS.ProcessEnv = process.env): WorkerConfig {
   return {
-    apiUrl: required("MIMU_API_URL").replace(/\/+$/, ""),
-    accessKey: required("MIMU_ACCESS_KEY"),
-    ollamaHost: process.env.OLLAMA_HOST?.trim() || "http://127.0.0.1:11434",
-    model: process.env.MIMU_MODEL?.trim() || "gemma4:e4b",
-    intervalMs: number("MIMU_INTERVAL_MINUTES", 60) * 60_000,
-    pollMs: number("MIMU_POLL_SECONDS", 10) * 1000,
-    askPollMs: number("MIMU_ASK_POLL_SECONDS", 3) * 1000,
-    batchSize: number("MIMU_BATCH_SIZE", 5),
+    apiUrl: required(env.MIMU_API_URL || saved.apiUrl, "MIMU_API_URL").replace(/\/+$/, ""),
+    accessKey: required(env.MIMU_ACCESS_KEY || saved.accessKey, "MIMU_ACCESS_KEY"),
+    ollamaHost: env.OLLAMA_HOST?.trim() || saved.ollamaHost || DEFAULT_OLLAMA_HOST,
+    model: env.MIMU_MODEL?.trim() || saved.model || DEFAULT_MODEL,
+    intervalMs: number(env, "MIMU_INTERVAL_MINUTES", 60) * 60_000,
+    pollMs: number(env, "MIMU_POLL_SECONDS", 10) * 1000,
+    askPollMs: number(env, "MIMU_ASK_POLL_SECONDS", 3) * 1000,
+    batchSize: number(env, "MIMU_BATCH_SIZE", 5),
   };
 }

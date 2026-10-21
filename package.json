@@ -14,7 +14,8 @@
     "dev:web": "pnpm --filter @mimu/web dev",
     "dev:api": "pnpm --filter @mimu/api dev",
     "migrate": "pnpm --filter @mimu/api migrate",
-    "worker": "pnpm --filter @mimu/worker start",
+    "quickstart": "pnpm --filter @mimu/api quickstart",
+    "worker": "pnpm --filter @pinkpixel/mimu-worker start",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
   }

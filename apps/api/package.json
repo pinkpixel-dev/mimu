@@ -8,6 +8,7 @@
     "dev:local": "tsx scripts/local.ts",
     "deploy": "pnpm --filter @mimu/web build && wrangler deploy",
     "migrate": "tsx scripts/migrate.ts",
+    "quickstart": "tsx scripts/quickstart.ts",
     "typecheck": "tsc -p .",
     "test": "node --import tsx --test src/**/*.test.ts"
   },
