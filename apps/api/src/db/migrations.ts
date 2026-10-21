@@ -68,6 +68,26 @@ export const MIGRATIONS: { version: number; name: string; statements: string[] }
     // JSON array of phrases Gemma couldn't make sense of (likely misheard), shown next to the transcript.
     statements: [`ALTER TABLE notes ADD COLUMN uncertain TEXT NOT NULL DEFAULT '[]'`],
   },
+  {
+    version: 3,
+    name: "ask mimu",
+    statements: [
+      `CREATE TABLE asks (
+        id TEXT PRIMARY KEY,
+        question TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'answering', 'answered', 'failed')),
+        answer TEXT,
+        note_ids TEXT NOT NULL DEFAULT '[]',
+        error_message TEXT,
+        claim_token TEXT,
+        claimed_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        answered_at TEXT
+      )`,
+      `CREATE INDEX asks_status_created_idx ON asks (status, created_at)`,
+    ],
+  },
 ];
 
 export async function migrate(db: Client): Promise<number[]> {

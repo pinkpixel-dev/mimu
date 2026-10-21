@@ -1,5 +1,6 @@
 import { Ollama } from "ollama";
 import { MimuApi } from "./api.ts";
+import { Asker } from "./ask/asker.ts";
 import { loadConfig } from "./config.ts";
 import { log } from "./log.ts";
 import { OrganizeRunner } from "./runner.ts";
@@ -8,6 +9,7 @@ const config = loadConfig();
 const api = new MimuApi(config.apiUrl, config.accessKey);
 const ollama = new Ollama({ host: config.ollamaHost });
 const runner = new OrganizeRunner(api, ollama, config.model, config.batchSize);
+const asker = new Asker(api, ollama, config.model);
 
 log.info(`Mimu worker · ${config.model} · ${config.apiUrl} · every ${config.intervalMs / 60_000} min`);
 
@@ -25,6 +27,9 @@ try {
 } catch (error) {
   log.warn(`Can't reach the API yet: ${error instanceof Error ? error.message : error}`);
 }
+
+// Questions are answered on their own quick timer, so Ask Mimu stays responsive even during an organize pass.
+setInterval(() => void asker.tick(), config.askPollMs);
 
 await runner.pass("startup");
 

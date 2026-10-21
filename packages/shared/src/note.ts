@@ -30,6 +30,8 @@ export const NoteQuery = z.object({
   category: z.string().optional(),
   tag: z.string().optional(),
   q: z.string().trim().max(200).optional(),
+  /** "all" (default): every search word must match. "any": rank notes matching any word (used by Ask Mimu). */
+  match: z.enum(["all", "any"]).default("all"),
   from: z.iso.datetime({ offset: true }).optional(),
   to: z.iso.datetime({ offset: true }).optional(),
   before: z.string().optional(),

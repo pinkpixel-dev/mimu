@@ -1,4 +1,4 @@
-import type { CaptureInput, Note, NotePatch, WorkerStatus } from "@mimu/shared";
+import type { Ask, CaptureInput, Note, NotePatch, WorkerStatus } from "@mimu/shared";
 import { normalizeApiUrl, type Connection } from "../connection.ts";
 
 /** Distinguishes "the server said no" from "couldn't reach the server", which the outbox treats differently. */
@@ -86,6 +86,14 @@ export class ApiClient {
 
   async tags(): Promise<Tag[]> {
     return (await this.request<{ tags: Tag[] }>("/tags")).tags;
+  }
+
+  createAsk(question: string): Promise<Ask> {
+    return this.request<Ask>("/asks", { method: "POST", body: JSON.stringify({ id: crypto.randomUUID(), question }) });
+  }
+
+  async listAsks(limit = 10): Promise<Ask[]> {
+    return (await this.request<{ asks: Ask[] }>(`/asks?limit=${limit}`)).asks;
   }
 
   async requestOrganize(): Promise<void> {

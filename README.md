@@ -27,7 +27,8 @@ The speech recognition runs on your phone, and the organizing runs on your deskt
 2. **Save.** The note goes into a queue on your device first, then uploads. If you're offline, it waits and syncs when you're back.
 3. **Organize.** The Mimu worker on your desktop picks up new notes when it starts, every hour, and whenever you tap **Organize now**. Gemma 4 (`gemma4:e4b` by default) writes a title, a cleaned-up Markdown body, a summary, a category, and tags. Your original transcript is always kept.
 4. **Browse.** Search across everything, filter by category, tag, or Unsorted, and edit anything by hand. Your edits are never overwritten by the worker.
-5. **Export.** Download one note as `.md`, or the whole library as a ZIP of Markdown files grouped into category folders.
+5. **Ask.** Ask things like "who do I need to call?" or "what did I save yesterday?". The desktop worker searches your notes and answers from them only, with links to the notes it used.
+6. **Export.** Download one note as `.md`, or the whole library as a ZIP of Markdown files grouped into category folders.
 
 ## Features
 
@@ -37,10 +38,11 @@ The speech recognition runs on your phone, and the organizing runs on your deskt
 - Categories stay tidy: "Developer Tool" gets filed into an existing "Developer Tools" instead of creating a near-duplicate
 - **"Mimu wasn't sure about"**: phrases that look misheard (like "the token cinnamons after an hour") get flagged next to the note instead of being quietly guessed at
 - Full-text search with prefix matching and stemming
+- **Ask Mimu**: plain-language questions about your notes, answered by your local model from your notes only. If nothing matches, it says so instead of making something up.
 - Manual editing, delete with confirmation, and the original transcript one tap away
 - Markdown export with YAML frontmatter, stable note IDs, and a `manifest.json`, which also works in Obsidian
 - Add to Home Screen on iOS for a full-screen app with the Mimu icon
-- Works on phones and desktops: bottom tabs on the phone, sidebar plus list and detail panes on a bigger screen
+- Works on phones and desktops: Capture, Library, and Ask tabs on the phone, sidebar plus list and detail panes on a bigger screen
 
 ## What you need
 
@@ -133,7 +135,7 @@ Make sure the URL ends in `/api`. Then start the worker and leave it running:
 pnpm worker
 ```
 
-The `.env` file also has optional settings for the Ollama host, the model, how often it runs (`MIMU_INTERVAL_MINUTES`, default 60), and how often it checks for **Organize now** (`MIMU_POLL_SECONDS`, default 60).
+The `.env` file also has optional settings for the Ollama host, the model, how often it runs (`MIMU_INTERVAL_MINUTES`, default 60), how often it checks for **Organize now** (`MIMU_POLL_SECONDS`, default 60), and how often it checks for new questions (`MIMU_ASK_POLL_SECONDS`, default 3).
 
 ## Using Mimu
 
@@ -142,6 +144,7 @@ The `.env` file also has optional settings for the Ollama host, the model, how o
 3. Tap the mic, talk, and tap again. Fix anything that came out wrong, then **Save**.
 4. Your note shows up in **Library → Unsorted** as "Waiting for Mimu" until the desktop worker organizes it. Tap **Organize now** if you don't want to wait for the hourly run.
 5. Open a note to read it, check the original transcript, **Edit** it, or **Export** it. **Export all** in the library downloads everything.
+6. Open **Ask** and ask about anything you've saved. Answers usually take a few seconds and link to the notes they came from. Your desktop worker needs to be running for this.
 
 The first time you open the capture screen, it downloads the Whisper model (about 41 MB). After that, it's cached.
 
@@ -179,6 +182,9 @@ That's iOS killing the tab, which happened with WebGPU on my iPhone. Mimu uses W
 
 **Notes stay "Waiting for Mimu".**
 Make sure `pnpm worker` is running, that Ollama is running, and that the model is pulled (`ollama list`). The worker logs every note it organizes.
+
+**Ask Mimu says "Still waiting. Is the Mimu worker running on your desktop?"**
+Questions sit in a queue until the worker picks them up. Start `pnpm worker`, and the waiting question gets answered within a few seconds.
 
 **"Key rejected · Reconnect" shows up in the app.**
 The access key changed. Tap it and enter the new one. Anything you saved is still queued on the device.
@@ -233,9 +239,9 @@ assets/     Mascot and app icon
 
 - Single user, protected by one access key. There are no accounts.
 - English only for now (`whisper-tiny.en`).
-- Notes only get organized while your desktop worker is running.
+- Notes only get organized, and questions only get answered, while your desktop worker is running.
+- Ask Mimu finds notes by keyword (with some help from Gemma picking search words), not by meaning, so a question worded very differently from the note can miss it.
 - The app itself needs a connection to load. Captures still queue offline once it's open.
-- Ask Mimu (asking questions about your notes) isn't built yet.
 
 ## License
 

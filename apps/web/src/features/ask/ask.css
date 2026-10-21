@@ -1,0 +1,99 @@
+.ask {
+  max-width: 1120px;
+  padding: max(var(--space-4), env(safe-area-inset-top)) var(--space-4) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ask__form {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ask__field {
+  flex: 1;
+  min-width: 0;
+}
+
+.ask__field .field__input {
+  width: 100%;
+}
+
+.ask__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ask-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.ask-card__question {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Keep answers comfortable to read even when the card is wide. */
+.ask-card .prose {
+  max-width: 75ch;
+}
+
+.ask-card__thinking {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-muted);
+}
+
+.ask-card__thinking img {
+  width: 40px;
+  height: 40px;
+  animation: ask-bob 1.8s var(--ease-out) infinite;
+}
+
+@keyframes ask-bob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.ask-card__sources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.ask-card__sources ul {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.ask-card__sources a {
+  color: var(--accent);
+}
+
+.ask-card__failed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.ask-card__time {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}

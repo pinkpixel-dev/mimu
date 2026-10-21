@@ -2,7 +2,18 @@ import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import type { Client } from "@libsql/client";
 import type { z } from "zod";
-import { CaptureInput, ClaimInput, CompleteInput, FailInput, NotePatch, NoteQuery } from "@mimu/shared";
+import {
+  AskAnswerInput,
+  AskFailInput,
+  AskInput,
+  CaptureInput,
+  ClaimInput,
+  CompleteInput,
+  FailInput,
+  NotePatch,
+  NoteQuery,
+} from "@mimu/shared";
+import { answerAsk, claimAsk, createAsk, failAsk, getAsk, listAsks } from "./repo/asks.ts";
 import { requireAccessKey } from "./auth.ts";
 import { markdownDownload, zipDownload } from "./export.ts";
 import { allNotes, createNote, deleteNote, getNote, listNotes, patchNote } from "./repo/notes.ts";
@@ -80,6 +91,37 @@ export function createApp(db: Client, accessKey: string) {
   app.get("/tags", async (c) => c.json({ tags: await listTags(db) }));
 
   app.post("/organize", async (c) => c.json({ organize_requested_at: await requestOrganize(db) }, 202));
+
+  app.post("/asks", async (c) => {
+    const input = await parseBody(c, AskInput);
+    if (input instanceof Response) return input;
+    const { ask, created } = await createAsk(db, input);
+    return c.json(ask, created ? 201 : 200);
+  });
+
+  app.get("/asks", async (c) => {
+    const limit = Math.min(Math.max(Number(c.req.query("limit") ?? 10) || 10, 1), 50);
+    return c.json({ asks: await listAsks(db, limit) });
+  });
+
+  app.get("/asks/:id", async (c) => {
+    const ask = await getAsk(db, c.req.param("id"));
+    return ask ? c.json(ask) : c.json({ error: "not_found" }, 404);
+  });
+
+  app.post("/worker/asks/claim", async (c) => c.json({ ask: await claimAsk(db) }));
+
+  app.post("/worker/asks/:id/answer", async (c) => {
+    const input = await parseBody(c, AskAnswerInput);
+    if (input instanceof Response) return input;
+    return (await answerAsk(db, c.req.param("id"), input)) ? c.body(null, 204) : c.json({ error: "stale_claim" }, 409);
+  });
+
+  app.post("/worker/asks/:id/fail", async (c) => {
+    const input = await parseBody(c, AskFailInput);
+    if (input instanceof Response) return input;
+    return (await failAsk(db, c.req.param("id"), input)) ? c.body(null, 204) : c.json({ error: "stale_claim" }, 409);
+  });
 
   app.get("/worker/status", async (c) => c.json(await workerStatus(db)));
 

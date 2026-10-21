@@ -64,13 +64,13 @@ export async function getNote(db: Client, id: string): Promise<Note | null> {
 }
 
 /** Turn free text into a safe FTS5 query: each word becomes a quoted prefix term, so punctuation can't break MATCH syntax. */
-export function toFtsQuery(q: string): string | null {
+export function toFtsQuery(q: string, match: "all" | "any" = "all"): string | null {
   const words = q.match(/[\p{L}\p{N}]+/gu);
   if (!words) return null;
   return words
     .slice(0, 8)
     .map((word) => `"${word}"*`)
-    .join(" ");
+    .join(match === "any" ? " OR " : " ");
 }
 
 export async function listNotes(db: Client, query: NoteQuery): Promise<Note[]> {
@@ -79,7 +79,7 @@ export async function listNotes(db: Client, query: NoteQuery): Promise<Note[]> {
   let from = "notes n LEFT JOIN categories c ON c.id = n.category_id";
   let order = "n.created_at DESC, n.id DESC";
 
-  const fts = query.q ? toFtsQuery(query.q) : null;
+  const fts = query.q ? toFtsQuery(query.q, query.match) : null;
   if (query.q && !fts) return [];
   if (fts) {
     from = `notes_fts f JOIN notes n ON n.rowid = f.rowid LEFT JOIN categories c ON c.id = n.category_id`;

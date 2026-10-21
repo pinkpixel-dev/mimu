@@ -1,4 +1,21 @@
-import type { ClaimedNote, CompleteInput, FailInput, Note, WorkerStatus } from "@mimu/shared";
+import type {
+  AskAnswerInput,
+  AskFailInput,
+  ClaimedAsk,
+  ClaimedNote,
+  CompleteInput,
+  FailInput,
+  Note,
+  WorkerStatus,
+} from "@mimu/shared";
+
+export interface NoteSearch {
+  q?: string;
+  match?: "all" | "any";
+  from?: string;
+  to?: string;
+  limit?: number;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -61,5 +78,23 @@ export class MimuApi {
 
   async fail(id: string, input: FailInput): Promise<void> {
     await this.request(`/worker/fail/${encodeURIComponent(id)}`, { method: "POST", body: JSON.stringify(input) });
+  }
+
+  async searchNotes(search: NoteSearch): Promise<Note[]> {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(search)) if (value !== undefined && value !== "") params.set(key, String(value));
+    return (await this.request<{ notes: Note[] }>(`/notes?${params}`)).notes;
+  }
+
+  async claimAsk(): Promise<ClaimedAsk | null> {
+    return (await this.request<{ ask: ClaimedAsk | null }>("/worker/asks/claim", { method: "POST" })).ask;
+  }
+
+  async answerAsk(id: string, input: AskAnswerInput): Promise<void> {
+    await this.request(`/worker/asks/${encodeURIComponent(id)}/answer`, { method: "POST", body: JSON.stringify(input) });
+  }
+
+  async failAsk(id: string, input: AskFailInput): Promise<void> {
+    await this.request(`/worker/asks/${encodeURIComponent(id)}/fail`, { method: "POST", body: JSON.stringify(input) });
   }
 }

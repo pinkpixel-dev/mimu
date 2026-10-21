@@ -166,6 +166,49 @@ describe("worker flow", () => {
   });
 });
 
+describe("ask mimu", () => {
+  type AskBody = { id: string; status: string; answer: string | null; notes: { id: string; title: string }[] };
+  type ClaimBody = { ask: { id: string; question: string; claim_token: string } | null };
+
+  test("queues a question, lets the worker answer it, and resolves cited notes to titles", async () => {
+    const note = await capture("what if the terminal had a pomodoro timer built in");
+    const created = await call<AskBody>("POST", "/asks", { id: "ask-0000000001", question: "what was my timer idea?" });
+    assert.equal(created.status, 201);
+    assert.equal(created.body.status, "pending");
+    assert.equal((await call("POST", "/asks", { id: "ask-0000000001", question: "what was my timer idea?" })).status, 200);
+
+    const claim = (await call<ClaimBody>("POST", "/worker/asks/claim")).body.ask!;
+    assert.equal(claim.question, "what was my timer idea?");
+    assert.equal((await call<ClaimBody>("POST", "/worker/asks/claim")).body.ask, null, "one worker per question");
+
+    const stale = await call("POST", `/worker/asks/${claim.id}/answer`, { claim_token: "nope", answer: "x", note_ids: [] });
+    assert.equal(stale.status, 409);
+    const answered = await call("POST", `/worker/asks/${claim.id}/answer`, {
+      claim_token: claim.claim_token,
+      answer: "A pomodoro timer built into the terminal.",
+      note_ids: [note.id, note.id, "deleted-or-made-up"],
+    });
+    assert.equal(answered.status, 204);
+
+    const ask = await call<AskBody>("GET", `/asks/${claim.id}`);
+    assert.equal(ask.body.status, "answered");
+    assert.deepEqual(ask.body.notes, [{ id: note.id, title: "what if the terminal had a pomodoro timer built in" }]);
+    assert.equal((await call<{ asks: AskBody[] }>("GET", "/asks")).body.asks[0]?.id, claim.id);
+  });
+
+  test("failed answers are recorded, and match=any finds notes sharing any word", async () => {
+    await call("POST", "/asks", { id: "ask-0000000002", question: "anything about zebras?" });
+    const claim = (await call<ClaimBody>("POST", "/worker/asks/claim")).body.ask!;
+    assert.equal((await call("POST", `/worker/asks/${claim.id}/fail`, { claim_token: claim.claim_token, error: "ollama down" })).status, 204);
+    assert.equal((await call<AskBody>("GET", `/asks/${claim.id}`)).body.status, "failed");
+
+    const all = await call<{ notes: Note[] }>("GET", "/notes?q=pomodoro%20zebras");
+    assert.equal(all.body.notes.length, 0, "default search needs every word");
+    const any = await call<{ notes: Note[] }>("GET", "/notes?q=pomodoro%20zebras&match=any");
+    assert.equal(any.body.notes.length, 1);
+  });
+});
+
 describe("library queries", () => {
   test("full-text search matches raw text and titles, with prefixes and punctuation", async () => {
     const hit = await capture("what if the kumquat browser had a reader mode");

@@ -11,13 +11,14 @@ interface Props {
   tags: Tag[];
   outbox: Outbox;
   onCapture: () => void;
+  onAsk: () => void;
   onFilter: (filter: LibraryFilter) => void;
   onReconnect: () => void;
 }
 
 /** Desktop navigation. Hidden on narrow screens, where the bottom tab bar and filter chips take over. */
-export function Sidebar({ route, filter, categories, tags, outbox, onCapture, onFilter, onReconnect }: Props) {
-  const inLibrary = route.view !== "capture";
+export function Sidebar({ route, filter, categories, tags, outbox, onCapture, onAsk, onFilter, onReconnect }: Props) {
+  const inLibrary = route.view === "library" || route.view === "note";
   const item = (target: LibraryFilter, label: string, count?: number) => (
     <li key={label}>
       <button
@@ -42,6 +43,11 @@ export function Sidebar({ route, filter, categories, tags, outbox, onCapture, on
         <li>
           <button type="button" className="nav-item" aria-current={route.view === "capture" ? "page" : undefined} onClick={onCapture}>
             <span className="nav-item__label">Capture</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" className="nav-item" aria-current={route.view === "ask" ? "page" : undefined} onClick={onAsk}>
+            <span className="nav-item__label">Ask Mimu</span>
           </button>
         </li>
         {item({ kind: "unsorted" }, "Unsorted")}
