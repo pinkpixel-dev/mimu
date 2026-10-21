@@ -30,7 +30,7 @@ export function loadConfig(): WorkerConfig {
     ollamaHost: process.env.OLLAMA_HOST?.trim() || "http://127.0.0.1:11434",
     model: process.env.MIMU_MODEL?.trim() || "gemma4:e4b",
     intervalMs: number("MIMU_INTERVAL_MINUTES", 60) * 60_000,
-    pollMs: number("MIMU_POLL_SECONDS", 60) * 1000,
+    pollMs: number("MIMU_POLL_SECONDS", 10) * 1000,
     askPollMs: number("MIMU_ASK_POLL_SECONDS", 3) * 1000,
     batchSize: number("MIMU_BATCH_SIZE", 5),
   };

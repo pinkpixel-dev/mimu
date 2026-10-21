@@ -135,7 +135,7 @@ Make sure the URL ends in `/api`. Then start the worker and leave it running:
 pnpm worker
 ```
 
-The `.env` file also has optional settings for the Ollama host, the model, how often it runs (`MIMU_INTERVAL_MINUTES`, default 60), how often it checks for **Organize now** (`MIMU_POLL_SECONDS`, default 60), and how often it checks for new questions (`MIMU_ASK_POLL_SECONDS`, default 3).
+The `.env` file also has optional settings for the Ollama host, the model, how often it runs (`MIMU_INTERVAL_MINUTES`, default 60), how often it checks for **Organize now** (`MIMU_POLL_SECONDS`, default 10), and how often it checks for new questions (`MIMU_ASK_POLL_SECONDS`, default 3).
 
 ## Using Mimu
 
