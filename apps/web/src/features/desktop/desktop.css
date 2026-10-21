@@ -158,3 +158,29 @@
   flex-basis: 100%;
   font-size: 14px;
 }
+
+.pairing__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.pairing__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.qr {
+  flex: none;
+  border-radius: var(--radius-sm);
+}
+
+.qr__tile {
+  fill: var(--text);
+}
+
+.qr__modules {
+  fill: var(--bg);
+}

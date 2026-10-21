@@ -12,6 +12,7 @@ import {
   findAccount,
   findAccountByGithub,
   findAccountByKey,
+  LOGIN_CODE_TTL_MS,
   insertAccount,
   issueKey,
   linkGithub,
@@ -169,6 +170,13 @@ export function createHostedApp(deps: HostedDeps) {
     const account = await requireAccount(c);
     if (account instanceof Response) return account;
     return c.json({ github_login: account.github_login, created_at: account.created_at, expires_at: expiresAt(account) });
+  });
+
+  /** A one-time code for signing another device in to this account (shown as a QR code). Expires in 5 minutes. */
+  app.post("/account/pair", async (c) => {
+    const account = await requireAccount(c);
+    if (account instanceof Response) return account;
+    return c.json({ code: await createLoginCode(deps.accounts, account.id), expires_in: LOGIN_CODE_TTL_MS / 1000 }, 201);
   });
 
   app.delete("/account", async (c) => {

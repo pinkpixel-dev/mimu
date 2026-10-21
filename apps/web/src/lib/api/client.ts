@@ -138,6 +138,11 @@ export class ApiClient {
     return (await this.request<{ url: string }>("/auth/github/link", { method: "POST" })).url;
   }
 
+  /** One-time code that signs another device in to this demo account. */
+  pairingCode(): Promise<{ code: string; expires_in: number }> {
+    return this.request("/account/pair", { method: "POST" });
+  }
+
   async deleteDemoAccount(): Promise<void> {
     await this.request("/account", { method: "DELETE" });
   }

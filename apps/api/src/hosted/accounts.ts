@@ -15,7 +15,7 @@ export interface Account {
 export const ACCOUNT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** `last_seen_at` is refreshed at most this often, so every API call doesn't write to the accounts database. */
 const SEEN_RESOLUTION_MS = 60 * 60 * 1000;
-const LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
+export const LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 
 const KEY_PREFIX = "mimu_";

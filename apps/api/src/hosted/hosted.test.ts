@@ -121,6 +121,22 @@ describe("hosted demo", () => {
     assert.equal((await call("POST", "/auth/exchange", null, { code })).status, 400);
   });
 
+  test("a pairing code signs another device in to the same account, once", async () => {
+    const key = await existingKey();
+    const pair = await call<{ code: string; expires_in: number }>("POST", "/account/pair", key);
+    assert.equal(pair.status, 201);
+    assert.equal(pair.body.expires_in, 300);
+
+    const phone = await call<{ key: string }>("POST", "/auth/exchange", null, { code: pair.body.code });
+    assert.equal(phone.status, 200);
+    assert.notEqual(phone.body.key, key, "the phone gets its own key");
+    assert.equal((await findAccountByKey(accounts, phone.body.key))?.id, (await findAccountByKey(accounts, key))?.id);
+    assert.equal((await call("POST", "/auth/exchange", null, { code: pair.body.code })).status, 400);
+
+    // The owner's key isn't a demo account, so there's nothing to pair.
+    assert.equal((await call("POST", "/account/pair", OWNER_KEY)).status, 404);
+  });
+
   test("deleting an account removes its database and its keys", async () => {
     const key = await existingKey();
     const account = await findAccountByKey(accounts, key);

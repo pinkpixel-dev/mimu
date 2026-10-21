@@ -24,7 +24,7 @@ type View =
   | { name: "save-key"; connection: Connection };
 
 const SIGNIN_ERRORS: Record<string, string> = {
-  expired: "That sign-in link expired. Try again.",
+  expired: "That sign-in link was already used or has expired.",
   github: "GitHub sign-in didn't go through. Try again.",
   full: "The demo is full right now.",
 };

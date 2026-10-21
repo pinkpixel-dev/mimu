@@ -6,7 +6,11 @@ import { ConnectScreen } from "./features/connect/ConnectScreen.tsx";
 import { Shell } from "./features/shell/Shell.tsx";
 
 export function App() {
-  const [connection, setConnection] = useState<Connection | null>(() => loadConnection());
+  // A sign-in link (GitHub or a scanned pairing code) goes through the connect screen even if this device
+  // is already connected, so the new account replaces the old one.
+  const [connection, setConnection] = useState<Connection | null>(() =>
+    location.hash.startsWith("#/signin?") ? null : loadConnection(),
+  );
   const api = useMemo(() => (connection ? new ApiClient(connection) : null), [connection]);
   const outbox = useMemo(() => (api ? new Outbox(api) : null), [api]);
 
