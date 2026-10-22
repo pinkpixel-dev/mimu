@@ -57,38 +57,50 @@ export function AskView({ api }: { api: ApiClient }) {
     }
   }
 
+  const empty = loaded && asks.length === 0;
+  const form = (
+    <form className={empty ? "ask__form ask__form--empty" : "ask__form"} onSubmit={submit}>
+      <label className="ask__field">
+        <span className="visually-hidden">Ask about your notes</span>
+        <input
+          className="field__input"
+          value={question}
+          maxLength={500}
+          placeholder="What was that terminal browser idea?"
+          onChange={(event) => setQuestion(event.target.value)}
+        />
+      </label>
+      <button type="submit" className="button button--primary" disabled={sending || !question.trim()}>
+        {sending ? "Asking…" : "Ask"}
+      </button>
+    </form>
+  );
+  const errorLine = error && (
+    <p className="form-error ask__error" role="alert">
+      {error}
+    </p>
+  );
+
+  // With nothing asked yet, the box sits under the mascot. Once there are answers, it moves above them.
+  if (empty) {
+    return (
+      <div className="ask">
+        <EmptyState pose="searching" text="Ask about anything you've saved." />
+        {form}
+        {errorLine}
+      </div>
+    );
+  }
+
   return (
     <div className="ask">
-      <form className="ask__form" onSubmit={submit}>
-        <label className="ask__field">
-          <span className="visually-hidden">Ask about your notes</span>
-          <input
-            className="field__input"
-            value={question}
-            maxLength={500}
-            placeholder="What was that terminal browser idea?"
-            onChange={(event) => setQuestion(event.target.value)}
-          />
-        </label>
-        <button type="submit" className="button button--primary" disabled={sending || !question.trim()}>
-          {sending ? "Asking…" : "Ask"}
-        </button>
-      </form>
-      {error && (
-        <p className="form-error ask__error" role="alert">
-          {error}
-        </p>
-      )}
-
-      {loaded && asks.length === 0 ? (
-        <EmptyState pose="searching" text="Ask about anything you've saved." />
-      ) : (
-        <ul className="ask__list" aria-live="polite">
-          {asks.map((ask) => (
-            <AskCard key={ask.id} ask={ask} onRetry={(event) => submit(event, ask.question)} />
-          ))}
-        </ul>
-      )}
+      {loaded && form}
+      {errorLine}
+      <ul className="ask__list" aria-live="polite">
+        {asks.map((ask) => (
+          <AskCard key={ask.id} ask={ask} onRetry={(event) => submit(event, ask.question)} />
+        ))}
+      </ul>
     </div>
   );
 }
