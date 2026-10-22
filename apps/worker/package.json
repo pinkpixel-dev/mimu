@@ -1,6 +1,6 @@
 {
   "name": "@pinkpixel/mimu-worker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The desktop half of Mimu: organizes your voice notes and answers questions about them with a local model through Ollama.",
   "license": "Apache-2.0",
   "author": "Pink Pixel <admin@pinkpixel.dev> (https://pinkpixel.dev)",

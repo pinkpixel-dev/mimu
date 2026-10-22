@@ -27,6 +27,7 @@ The first version of Mimu, built for the Hacktoberfest 2026 Week 3 challenge.
 - Every morning at 8 (desktop time, `MIMU_DIGEST_HOUR`), the worker has Gemma write a short digest of what's due today and what you saved yesterday, and shows it as a desktop notification.
 - A **Today** card at the top of the library shows the digest and everything due today.
 - Turn on notifications from the Account page to get the morning digest on your phone, plus a reminder 30 minutes before anything with a time. Reminders come from a Cloudflare cron, so they arrive even when your computer is off. On iPhone this needs Mimu added to the Home Screen.
+- Due dates and the digest need `@pinkpixel/mimu-worker` 0.2.0 or newer. Older workers still organize notes, they just skip both.
 
 ### 📚 Library and Ask
 
