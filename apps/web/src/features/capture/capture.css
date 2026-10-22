@@ -2,7 +2,7 @@
   min-height: 100%;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  padding: max(var(--space-4), env(safe-area-inset-top)) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom));
+  padding: calc(env(safe-area-inset-top) + var(--space-4)) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom));
 }
 
 .capture__header {
@@ -67,7 +67,7 @@
 }
 
 .capture__stage {
-  /* Explicit rows: on wide screens the header is hidden, and the runtime panel would otherwise take the 1fr row. */
+  /* Explicit row: on wide screens the header is hidden, and the stage should still take the 1fr row. */
   grid-row: 2;
   display: flex;
   flex-direction: column;
@@ -172,56 +172,4 @@
   border: 1px solid var(--border);
   background: var(--surface);
   line-height: 1.6;
-}
-
-.runtime {
-  grid-row: 3;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  padding: var(--space-3) var(--space-4);
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.runtime summary {
-  cursor: pointer;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-}
-
-.runtime__grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-1) var(--space-4);
-  margin: var(--space-3) 0;
-}
-
-.runtime__grid dt {
-  color: var(--text-muted);
-}
-
-.runtime__grid dd {
-  margin: 0;
-  color: var(--text);
-  font-family: var(--font-mono);
-  overflow-wrap: anywhere;
-}
-
-.runtime__runs {
-  margin: 0 0 var(--space-3);
-  padding-left: var(--space-4);
-  font-family: var(--font-mono);
-  color: var(--text);
-}
-
-.runtime__previous p {
-  margin: 0 0 var(--space-1);
-}
-
-.runtime__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
 }

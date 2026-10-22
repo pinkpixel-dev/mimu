@@ -268,7 +268,7 @@ Each file has YAML frontmatter (`id`, `title`, `created`, `updated`, `category`,
 Add `/api` to the end of `MIMU_API_URL`. Every other path on the Worker serves the web app, so the worker gets HTML back.
 
 **The iPhone page reloads right after "Getting ready" hits 100%.**
-That's iOS killing the tab, which happened with WebGPU on my iPhone. Mimu uses WASM by default for this reason. If you've added `?runtime=webgpu` to the URL, remove it. Open **Speech runtime** at the bottom of the capture screen to see which backend is in use.
+That's iOS killing the tab, which happened with WebGPU on my iPhone. Mimu uses WASM by default for this reason. If you've added `?runtime=webgpu` to the URL, remove it.
 
 **Notes stay "Waiting for Mimu".**
 Open **Desktop** in the app. If it doesn't say **Connected**, check that the worker is running (`systemctl --user status mimu-worker` on Linux, or `pnpm worker` if you run it from the repo), that Ollama is running, and that the model is pulled (`ollama list`). The worker logs every note it organizes.

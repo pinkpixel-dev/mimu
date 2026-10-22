@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { EmptyRecordingError, Recorder } from "../../lib/audio/recorder.ts";
 import type { Outbox } from "../../lib/outbox/outbox.ts";
 import { useTranscriber } from "./useTranscriber.ts";
-import { RuntimePanel, type Measurement } from "./RuntimePanel.tsx";
 import { SyncBadge } from "./SyncBadge.tsx";
 import hugging from "../../assets/mascot/5.webp";
 import "./capture.css";
@@ -28,10 +27,9 @@ interface Props {
 }
 
 export function CaptureScreen({ outbox, onReconnect, onAccount, onSetUpDesktop }: Props) {
-  const { model, detected, load, transcribe } = useTranscriber();
+  const { model, transcribe } = useTranscriber();
   const recorderRef = useRef(new Recorder());
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
-  const [measurements, setMeasurements] = useState<Measurement[]>([]);
 
   const modelReady = model.status === "ready";
   const recording = phase.name === "recording";
@@ -48,11 +46,8 @@ export function CaptureScreen({ outbox, onReconnect, onAccount, onSetUpDesktop }
     if (recording) {
       setPhase({ name: "transcribing" });
       try {
-        const { audio, durationSec } = await recorderRef.current.stop();
-        const { text, ms } = await transcribe(audio);
-        if (model.status === "ready") {
-          setMeasurements((list) => [{ preset: model.info.preset, audioSec: durationSec, ms }, ...list].slice(0, 8));
-        }
+        const { audio } = await recorderRef.current.stop();
+        const { text } = await transcribe(audio);
         setPhase(text ? { name: "review", text, typed: false } : { name: "error", message: "Didn't catch anything. Try again?" });
       } catch (error) {
         const message =
@@ -177,8 +172,6 @@ export function CaptureScreen({ outbox, onReconnect, onAccount, onSetUpDesktop }
           </>
         )}
       </section>
-
-      <RuntimePanel model={model} detected={detected} measurements={measurements} onSwitch={load} disabled={recording || busy} />
     </main>
   );
 }

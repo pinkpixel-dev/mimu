@@ -56,6 +56,6 @@ The first version of Mimu, built for the Hacktoberfest 2026 Week 3 challenge.
 
 ### 🐛 Fixes
 
-- The Speech runtime panel no longer stretches to fill the capture screen on wide displays.
+- On iPhones with a notch or Dynamic Island, the top of each screen (the Mimu header, search box, and Ask box) no longer sits under the camera.
 - Signing out or deleting a demo account clears captures still waiting to upload on that device, so they can't land in the next account that signs in there.
 - The worker explains an HTML response as a missing `/api` at the end of `MIMU_API_URL`.
