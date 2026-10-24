@@ -10,6 +10,39 @@ Mimu is a voice notes app for people with too many ideas and not enough patience
 
 The speech recognition runs on your phone, and the organizing runs on your desktop. No paid AI API is involved anywhere.
 
+## See it in action
+
+Here's a quick demo video. Click the thumbnail to watch it on YouTube.
+
+<p align="center">
+  <a href="https://youtu.be/pFlZWNcPq-Y">
+    <img src="https://img.youtube.com/vi/pFlZWNcPq-Y/maxresdefault.jpg" alt="Mimu demo video" width="640" />
+  </a>
+</p>
+
+### Desktop
+
+<p align="center">
+  <img src="screenshots/desktop/1.png" alt="Capture screen with the mic button" width="49%" />
+  <img src="screenshots/desktop/2.png" alt="Typing a note instead of speaking" width="49%" />
+  <img src="screenshots/desktop/3.png" alt="Notes list in the Reminders category with a note open" width="49%" />
+  <img src="screenshots/desktop/4.png" alt="Ask Mimu answering questions about saved notes" width="49%" />
+</p>
+
+### Mobile
+
+<p align="center">
+  <img src="screenshots/mobile/1.png" alt="Mimu on mobile, screen 1" width="23%" />
+  <img src="screenshots/mobile/2.png" alt="Mimu on mobile, screen 2" width="23%" />
+  <img src="screenshots/mobile/3.png" alt="Mimu on mobile, screen 3" width="23%" />
+  <img src="screenshots/mobile/4.png" alt="Mimu on mobile, screen 4" width="23%" />
+</p>
+<p align="center">
+  <img src="screenshots/mobile/5.png" alt="Mimu on mobile, screen 5" width="23%" />
+  <img src="screenshots/mobile/6.png" alt="Mimu on mobile, screen 6" width="23%" />
+  <img src="screenshots/mobile/7.png" alt="Mimu on mobile, screen 7" width="23%" />
+</p>
+
 ## Try it
 
 There's a hosted demo at **[mimu.pinkpixel.dev](https://mimu.pinkpixel.dev)**, so you don't need a Turso or Cloudflare account to try Mimu.
