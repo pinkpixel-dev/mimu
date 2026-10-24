@@ -32,15 +32,15 @@ Here's a quick demo video. Click the thumbnail to watch it on YouTube.
 ### Mobile
 
 <p align="center">
-  <img src="screenshots/mobile/1.png" alt="Mimu on mobile, screen 1" width="23%" />
-  <img src="screenshots/mobile/2.png" alt="Mimu on mobile, screen 2" width="23%" />
-  <img src="screenshots/mobile/3.png" alt="Mimu on mobile, screen 3" width="23%" />
-  <img src="screenshots/mobile/4.png" alt="Mimu on mobile, screen 4" width="23%" />
+  <img src="screenshots/mobile/1.png" alt="Capture screen with the big mic button and a Type instead option" width="23%" />
+  <img src="screenshots/mobile/2.png" alt="Typing a note with Save and Discard buttons" width="23%" />
+  <img src="screenshots/mobile/3.png" alt="Mimu mascot hugging a note with the message: Got it. I will remember that." width="23%" />
+  <img src="screenshots/mobile/4.png" alt="Library with search, category filters, the Today digest card, and recent notes with a reminder time" width="23%" />
 </p>
 <p align="center">
-  <img src="screenshots/mobile/5.png" alt="Mimu on mobile, screen 5" width="23%" />
-  <img src="screenshots/mobile/6.png" alt="Mimu on mobile, screen 6" width="23%" />
-  <img src="screenshots/mobile/7.png" alt="Mimu on mobile, screen 7" width="23%" />
+  <img src="screenshots/mobile/5.png" alt="Ask screen with the mascot holding a magnifying glass and a question typed in" width="23%" />
+  <img src="screenshots/mobile/6.png" alt="Ask screen while Mimu looks through your notes" width="23%" />
+  <img src="screenshots/mobile/7.png" alt="Ask Mimu answer summarizing the day with links to the source notes" width="23%" />
 </p>
 
 ## Try it
